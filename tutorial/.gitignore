@@ -21,3 +21,6 @@ madoko.sty
 *.upb
 *.bbl
 *.blg
+.omakedb
+.omakedb.lock
+*.omc
