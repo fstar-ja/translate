@@ -29,7 +29,7 @@ Package       : fullpage
                 replace=/([a-zA-Z])_([\dnm])\b/\(\1_\2|\1~\2~\)/g
                 replace=/_n1\b/\(_n1|~n-1~\)/g
 
-~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](&link;){float=right}&br;&nl;"
+~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[エディタに読み込む](&link;){float=right}&br;&nl;"
 .pre-fragment : margin-bottom=0pt .framed padding=0.5ex
 
 ~ExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
@@ -106,6 +106,10 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
 <!-- * Use `Alt-Q` to reformat paragraphs. -->
 <!-- * Drag&Drop a `.bib` file on the editor and start including citations. -->
 
+(訳注: この日本語マニュアルは [Verified programming in F\*] の翻訳です。)
+
+[Verified programming in F\*]: https://www.fstar-lang.org/tutorial/tutorial.html
+
 # イントロダクション
 
 F\* は検証指向のプログラミング言語で、[Microsoft Research], [MSR-Inria], [Inria] によって開発されています。
@@ -121,13 +125,7 @@ F\* は検証指向のプログラミング言語で、[Microsoft Research], [MS
 [ML]: https://en.wikipedia.org/wiki/ML_%28programming_language%29
 [F\* ウェブサイト]: http://www.fstar-lang.org
 
-It will help if you are already familiar with functional programming
-languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
-with [Haskell]---we provide a quick review of basic concepts if you're
-a little rusty. If you feel you need more background, there are many useful
-resources freely available on the web, e.g., [TryF#],
-[F# for fun and profit], [Introduction to Caml], or the
-[Real World OCaml] book.
+もし ML 族の関数型プログラミング言語 (例: [OCaml], [F#], [Standard ML]) や [Haskell] に馴染みがあれば、それは役立つでしょう---もし馴染みがなくても、この文書で基本的な概念を簡単に説明します。より多くのバックグラウンドを知りたい場合には、Web 上に無料の有用な文書が多数あります。例えば、[TryF#], [F# for fun and profit], [Introduction to Caml], [Real World OCaml] などです。
 
 [OCaml]: http://caml.inria.fr/ocaml/
 [F#]: http://fsharp.org/
@@ -139,42 +137,36 @@ resources freely available on the web, e.g., [TryF#],
 [Introduction to Caml]: http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html
 [Real World OCaml]: https://realworldocaml.org/
 
-The easiest way to try F\* and solve the verification exercises in this tutorial is
-directly in your browser by using the [online F\* editor]. You can
-load the boilerplate code needed for each exercise into the online
-editor by clicking the "Load in editor" link in the body of each
-exercise. Your progress on each exercise will be stored in browser
-local storage, so you can return to your code later (e.g. if your
-browser crashes, etc).
+F\* を試したりこのチュートリアルの検証の練習問題を解く最も簡単な方法は [オンライン F\* エディタ] を使ってウェブブラウザ上で直接動かすことです。
+それぞの練習問題の本体中にある "エディタに読み込む" リンクをクリックすることで、それぞれの練習問題に必要なボイラープレートコードをオンラインエディタに読み込むことができます。
+それぞれの練習問題でのあなた進捗はウェブブラウザのローカルストレージに保存されるので、(例えばウェブブラウザがクラッシュなどしても) 後であなたのコードを復帰できます。
+(訳注: この文書では上記の [オンライン F\* エディタ] との連携は使えません。"エディタに読み込む" リンクをクリックすると、相当するソースコードをダウンロードできます。)
 
-[online F\* editor]: https://www.fstar-lang.org/run.php
+[オンライン F\* エディタ]: https://www.fstar-lang.org/run.php
 
-You can also do this tutorial by installing F\* locally on your
-machine.  F\* is open source and cross-platform, and you can get
-[binary packages] for Windows, Linux, and MacOS X or compile F\* from
-the [source code on github] using these [instructions].
+また F\* をローカルのマシンにインストールしてこの練習問題を解くこともできます。
+F\* はオープンソースでクロスプラットフォームです。
+Windows, Linux, MacOS X 向けの [バイナリパッケージ] をダウンロードでき、またこれらの [手順] を用いて [github 上のソースコード] から F\* をコンパイルできます。
 
-[binary packages]: https://github.com/FStarLang/FStar/releases
-[source code on github]: http://github.com/FStarLang/FStar
-[instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
+[バイナリパッケージ]: https://github.com/FStarLang/FStar/releases
+[github 上のソースコード]: http://github.com/FStarLang/FStar
+[手順]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 
-You can edit F\* code using your favourite text editor, but [Emacs],
-[Atom], and [Vim] have extensions that add special support for F\*,
-including syntax highlighting and interactive development. More
-details on [editor support] on the [F\* wiki].
+お好きなテキストエディタを使って F\* コードを編集できます。
+そして [Emacs], [Atom], [Vim] には F\* を特別にサポートする拡張があり、シンタックスハイライトやインタラクティブな開発ができます。
+[エディタのサポート] の詳細は [F\* wiki] を参照してください。
 
 [Emacs]: https://github.com/FStarLang/fstar-mode.el
 [Atom]: https://github.com/FStarLang/fstar-interactive
 [Vim]: https://github.com/FStarLang/VimFStar
-[editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
+[エディタのサポート]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
 [F\* wiki]: https://github.com/FStarLang/FStar/wiki
 
-By default F\* only verifies the input code, **it does not execute it**.
-To execute F\* code one needs to extract it to OCaml or F# and then
-compile it using the OCaml or F# compiler. More details on
-[executing F\* code] on the [F\* wiki].
+デフォルトでは F\* は入力されたコードを検証するだけで、**それを実行しません**。
+F\* コードを実行するためには、OCaml や F# にエクストラクトし、OCaml や F# コンパイラを使ってコンパイルする必要があります。
+[F\* コード実行] の詳細は [F\* wiki] を参照してください。
 
-[executing F\* code]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
+[F\* コード実行]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
 
 <!-- CH: TODO: add a chapter on extraction to tutorial -->
 
@@ -191,64 +183,48 @@ out the syntax of this shared fragment.
 
 <!-- # Getting started  { #sec-getstarted } -->
 
-## Your first F\* program: a simple model of access control {#sec-access-control}
+## はじめての F\* プログラム: アクセスコントロールの単純なモデル {#sec-access-control}
 
-Let's get started by diving into a simple model of access control on
-files. Along the way, we'll see some basic concepts from functional
-programming in general and a couple of F\*-specific features.
+ファイルに対するアクセスコントロールの単純なモデルからはじめましょう。
+この中で、一般的な関数型プログラミング由来のいくつかの基本的なコンセプトと、いくつかの F\* 固有の機能を見ることになるでしょう。
 
-Let's say we want to model a simple access control discipline on
-files---certain files are readable or writable, whereas others may be
-inaccessible. We'd like to write a policy to describe the privileges
-on each file, and we'd like to write programs whose file access
-patterns are checked against this policy, guaranteeing statically that an
-inaccessible file is never accessed mistakenly.
+ファイルの単純なアクセスコントロールをモデル化したいとしましょう---あるファイルは読み書き可能で、一方で他のファイルはアクセスできません。
+それぞれのファイルに対する権限を表わすポリシーを作り、このポリシーに照らしてプログラムのファイルアクセスのパターンをチェックし、アクセスできないファイルが決っして間違ってアクセスされてないことを静的に保証したいのです。
 
-Our model of this scenario (which we'll make more realistic in later
-sections) proceeds in three easy steps.
+このシナリオでのモデル (これは後の章でより現実的にします) は3つの簡単なステップで進展します。
 
-  1. Define the policy using simple pure functions.
+  1. 単純な純粋関数を使ってポリシーを定義します。
 
 
-  2. Identify the security-sensitive primitives in the program
-     and protect them with the policy.
+  2. プログラムにおけるセキュリティセンシティブなプリミティブを特定し、それらをポリシーを使って保護します。
 
 
-  3. Write the rest of the program, resting assured that the F\*
-     type-checker will verify statically
-     that the policy-protected primitives are never improperly accessed.
+  3. プログラムの残りを書きます。ポリシーで保護されたプリミティブは決っして不適切にアクセスされないことを F\* の型検査器は静的に検証することを保証されます。
 
 
-### Defining a policy { #sec-policy }
+### ポリシーを定義する { #sec-policy }
 
-The syntax of F\* is based closely on the OCaml syntax and the non-light
-syntax of F\#. An F\* program is composed of several modules. Each module
-begins with a `module` declaration, defining the name of the module. Its
-body includes a number of definitions, and optionally includes a 'main'
-expression.
+F\* の構文は OCaml 構文と F\# の non-light 構文に基づいています。
+F\* プログラムは数個のモジュールで構成されます。
+それぞれのモジュールはそのモジュールの名前を定義する `module` 宣言ではじまります。
+その本体は多数の定義と任意に 'main' 式を含みます。
 
-Here are two modules: one called `FileName` and the other one called
-`ACLs` (for Access-Control Lists):
+ここでは2つのモジュールがあります: 1つは `FileName` と呼ばれ、もう1つは (Access-Control Lists を表わす) `ACLs` と呼ばれます:
 
 ~ Fragment {link="code/exercises/ex1a-safe-read-write.fst"}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:ACLs]
 ~
 
-The `FileName` module defines a type synonym: we'll use `:string`s to
-model `:filename`s.  The `ACLs` module first `open`s the `FileName`
-module, so the type synonym there can now be used directly (otherwise
-it could only be called by a longer fully-qualified name:
-`:FileName.filename`).
+`FileName` モジュールは型シノニムを定義します: `:filename` をモデル化するのに `:string` を使えます。
+`ACLs` モジュールははじめに `FileName` モジュールを `open` するので、その型シノニムは直接使えるようになります。(そうしない場合、長いフル修飾された名前: `:FileName.filename` で呼び出す必要があります。)
 
-Afterwards `ACLs` defines our security policy as two boolean functions:
-`canWrite` and `canRead`:
-The `canWrite` function inspects its argument `f`
-using a *pattern matching expression*: it returns the boolean `true`
-when `f="demo/tempfile"` and `false` otherwise. The function
-`canRead` is similar---a file is readable if it is writable, or if it
-is the `"demo/README"` file.
+その後 `ACLs` は2つのブール関数としてセキュリティポリシーを定義します:
+`canWrite` と `canRead` です:
+`canWrite` 関数はその引数 `f` を *パターンマッチ式* を使って検査します:
+`f="demo/tempfile"` であったらブール `true` を返し、そうでなければ `false` を返します。
+関数 `canRead` も同様です---ファイルが書き込み可能もしくは `"demo/README"` ファイルであったなら、そのファイルは読み出し可能です。
 
-### Tying the policy to the file-access primitives
+### ポリシーをファイルアクセスプリミティブと結びつける
 
 To enforce the policy, we need to connect the policy to the primitives
 in our programs that actually implement the file reading and writing
