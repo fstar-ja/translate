@@ -41,6 +41,10 @@
 
 ## T
 
+### Type signature
+
+"型シグニチャ"
+
 ### Type synonym
 
 "型シノニム"
