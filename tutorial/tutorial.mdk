@@ -226,61 +226,44 @@ F\* プログラムは数個のモジュールで構成されます。
 
 ### ポリシーをファイルアクセスプリミティブと結びつける
 
-To enforce the policy, we need to connect the policy to the primitives
-in our programs that actually implement the file reading and writing
-operations.
+ポリシーを強制するためには、ファイルを読み書きを実際に実装するプログラムのプリミティブにポリシーを接続する必要があります。
 
-F\* provides a facility to specify interfaces to external modules that
-are implemented elsewhere. For example, operations that perform file
-input/output are implemented by the operating system and made available
-to F\* programs via the underlying framework, e.g., .NET or OCaml. We can
-describe a simple interface provided by the framework as follows:
+F\* は別に実装された外部のモジュールへのインターフェイスを指定する機能を提供しています。
+例えば、ファイルの入出力操作は OS によって実装されていますが、例えば .NET や OCaml のような下層のフレームワークを通じて F\* プログラム中で有効にできます。
+次のように、そのフレームワークによって提供された単純なインターフェイスを表現できます:
 
 ~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:FileIO]
 ~
 
-Here, we've defined an *interface* called `FileIO`, which uses the
-`ACLs` module. More importantly,
-`FileIO` provides two functions, `read` and `write`, which
-presumably implement the corresponding operations on files.
+ここでは、`ACLs` モジュールを使う `FileIO` と呼ばれる *インターフェイス* を定義しました。
+より重要なことは、`FileIO` は2つの関数 `read` と `write` を提供し、それらはおそらく相当するファイル操作を実装しています。
 
-By using the `assume val` notation, we *declare* that `FileIO` provides
-the `read` and `write` operations (they are *values*), but that we are
-*_not_ defining* those values here---they will be provided by an external
-module. Our use of `assume val` is much like the
-`extern`{language=csharp} keyword in C and other programming languages.
+`assume val` 表記を使って、`FileIO` が `read` と `write` 操作 (それらは *値* です) を提供すると *宣言* しましたが、ここではそれらの値を *定義していません* ---それらは外部のモジュールで提供されます。
+`assume val` の使用はC言語や他のプログラミング言語の `extern`{language=csharp} キーワードと良く似ています。
 
-As with `extern`{language=csharp}, when declaring a value, we also
-provide its type signature.
+`extern`{language=csharp} を使って値を宣言するとき、その型シグニチャも提供します。
 
-* The type of `read` says that it is a function expecting a `filename`
-  argument `f` for which `canRead f` evaluates to `true` and returning a
-  `string`-typed result. Thus the type-checker prevents any calls to
-  `read` for which the `canRead` predicate can't be statically proved
-  for the argument.
+* `read` の型は、それが引数 `f` に `canRead f` が `true` に評価されるような `filename` を取り、`string` 型の結果を返す関数であると主張しています。
+  したがって型検査器は、引数に対して述語 `canRead` が静的に証明されないようなどのような `read` 呼び出しも防止します。
 
-* The type of `write` says that it is a function of two arguments: the
-  first is a `filename` `f`, such that `canWrite f` evaluates to `true`;
-  the second is a `string`, the data to be written to the file `f`. The `write`
-  function returns `unit`, roughly analogous to the `void` type in
-  C. The type `unit` has only a single value, written `()`.
+* `write` の型は、それが次のような2引数の関数です:
+  1つ目は `canWrite f` が `true` に評価されるような `filename` `f` です;
+  2つ目は `string` で、そのデータはファイル `f` に書き込まれます。
+  `write` 関数は `unit` を返し、それはおおざっぱにC言語の `void` 型に似ています。
+  型 `unit` は唯一の値を持ち、`()` と書きます。
 
-The crucial bits of these declarations are, of course, the use of the
-`canRead` and `canWrite` functions in the signature, which allow us to
-connect the types of these security-sensitive functions to our policy.
+もちろん、これらの宣言の重要な点は型シグニチャにおける `canRead` と `canWrite` の使用です。
+それらによってセキュリティセンシティブな関数の型をポリシーに接続できます。
 
-### Writing programs and verifying their security
+### プログラムを書き、そのセキュリティを検証する
 
-Trying to check that a piece of code conforms to an access-control
-policy is a tedious and error-prone process. Even if every access is
-guarded by a security check, how can we make sure that each check is
-adequate? We can use F\*'s type-checker to automate this kind of code
-review.
+コード片がアクセスコントロールポリシーに従っていることをチェックするのは退屈でエラーしやすいでしょう。
+たとえそれぞれのアクセスがセキュリティチェックで保護されていたとしても、どうすればそれぞれのチェックが適切であることを確認できるでしょうか？
+F\* を使うことで、この種のコードレビューを自動化できます。
 
-Here's some simple, untrusted client code. It uses `FileIO`,
-defines some common file names, and then a function called
-`staticChecking`, which tries to read and write a few files.
+ここではいくらか単純な信頼できないクライアントコードを示します。
+このコードは共通のファイル名を定義する `FileIO` を使い、それから複数のファイルを読み書きする `staticChecking` と呼ばれる関数を使います。
 
 ~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:UntrustedClientCode]
@@ -288,14 +271,10 @@ defines some common file names, and then a function called
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:StaticChecking]
 ~
 
-The type-checker ensures statically that this untrusted code complies
-with the security policy. The reads to `tmp` and `readme`, and the
-write to `tmp` are allowed by the policy, so the program successfully
-type-checks. On the other hand, if we uncomment the lines that read
-or write `"junk"` to the `password` file, the F\* type-checker complains
-that the `passwd` file does not have the type
-`:f:filename{canRead f}`, respectively `:f:filename{canWrite f}`.
-For instance, if we uncomment the `write` we get the following error message:
+型検査器は、この信頼できないコードがセキュリティポリシーと共にコンパイルされるされることを静的に保証します。
+`tmp` と `readme` の読み出しと `tmp` への書き込みはポリシーで許されているので、このプログラムの型検査は成功します。
+一方、`password` ファイルを読んだり `"junk"` を書き込む行のコメントを外すと、F\* 型検査器は `passwd` ファイルがそれぞれ型 `:f:filename{canRead f}` や `:f:filename{canWrite f}` を持たないことを訴えます。
+例えば、この `write` のコメントを外すと、次のようなエラーメッセージが得られます:
 
 <!-- fstar.exe code/exercises/ex1a-safe-read-write.fst -->
 ``` {language=""}
@@ -307,31 +286,22 @@ Error ex1a-safe-read-write.fst(38,2-47,5): The following problems were found:
      "real", coming directly from the type-checker without being
      touched by human hands. -->
 
-You'll understand more about what that message means as you work
-through this tutorial, but, for now, take it to mean that F\* expected
-`canWrite passwd` to evaluate to `true`, which isn't the case.
+このチュートリアルを読み進めることで、このメッセージの意味がより理解できるようになるでしょう。
+ここでは、F\* が `canWrite passwd` が `true` に評価されると期待しているのに、この場合成立しないことを意味しています。
 
-The `staticChecking` function above illustrates how F\* can be used to
-specify a security policy, and statically enforce complete and correct
-mediation of that policy via type-checking. We will now illustrate
-that checking of the policy doesn't have to happen all statically, but
-that the dynamic checks added by the programmer are taken into account
-by the type system. In particular we implement a `checkedRead` function
-that consults the policy and only performs the `read` if the policy
-allows it, otherwise it raises an exception.
+上記の `staticChecking` 関数は、セキュリティポリシーを指定し、ポリシーの完全で正確な調停を型検査を通じて静的に強制するのにどのように F\* を使うことができるかを説明しています。
+ここで、ポリシーのチェックは全て静的に行なわれる必要はなく、プログラマが追加した動的なチェックが型システムによって検討されることを説明します。
+具体的には、ポリシーを調べてポリシーが許可するときだけ `read` を行ない、そうでなければ例外を発生させる `checkedRead` 関数を実装してみましょう。
 ~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedRead]
 ~
-Please note that the type of `checkRead` imposes no condition on the
-the input file `f`. When the `ACLs.canRead f` check succeeds the
-type-checker knows that the `FileIO.read f` is safe.
+`checkRead` 型は入力ファイル `f` の条件を強制していないことに注意してください。
+`ACLs.canRead f` チェックが成功したなら、型検査器は `FileIO.read f` 安全であることがわかります。
 
 ~Exercise
-Write a function called `checkedWrite` that takes a filename `f` and a
-string `s` as argument, checks the policy to make sure the file `f` is
-writable, and only if that is the case writes `s` to `f`. If the file
-is not readable your `checkedWrite` should raise an exception. As for
-`checkedRead`, your `checkedRead` should have no preconditions.
+Write a function called `checkedWrite` that takes a filename `f` and a string `s` as argument, checks the policy to make sure the file `f` is writable, and only if that is the case writes `s` to `f`.
+If the file is not readable your `checkedWrite` should raise an exception.
+As for `checkedRead`, your `checkedRead` should have no preconditions.
 ~~ ExerciseFragment {exname=ex1a-safe-read-write}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedWriteType]
 ~~
