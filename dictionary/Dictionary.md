@@ -8,8 +8,17 @@
 "ブール"
 
 ## C
+
+### Call-by-value
+
+"値渡し"
+
 ## D
 ## E
+
+### Effect
+
+"作用"
 
 ### Extract
 
@@ -19,6 +28,15 @@
 ## G
 ## H
 ## I
+
+### Impure
+
+"純粋でない"
+
+### IO
+
+"入出力"
+
 ## J
 ## K
 ## L
@@ -33,11 +51,24 @@
 
 ## Q
 ## R
+
+### Refinement type
+
+"リファインメント型"
+
 ## S
 
 ### Security-sensitive
 
 "セキュリティセンシティブな"
+
+### Side-effect
+
+"副作用"
+
+### Sub-effecting
+
+"サブ作用"
 
 ## T
 

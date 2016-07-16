@@ -299,9 +299,9 @@ Error ex1a-safe-read-write.fst(38,2-47,5): The following problems were found:
 `ACLs.canRead f` チェックが成功したなら、型検査器は `FileIO.read f` 安全であることがわかります。
 
 ~Exercise
-Write a function called `checkedWrite` that takes a filename `f` and a string `s` as argument, checks the policy to make sure the file `f` is writable, and only if that is the case writes `s` to `f`.
-If the file is not readable your `checkedWrite` should raise an exception.
-As for `checkedRead`, your `checkedRead` should have no preconditions.
+ファイル名 `f` と文字列 `s` を引数に取り、ポリシーをチェックしてファイル `f` が書き込み可能か確認し、書き込み可能な場合のみ `s` を `f` に書き込む `checkedWrite` という名前の関数を書いてください。
+そのファイルが書き込み可能でなかったら、`checkedWrite` は例外を発生させます。
+`checkedRead` に関して事前条件はありません。
 ~~ ExerciseFragment {exname=ex1a-safe-read-write}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedWriteType]
 ~~
@@ -311,37 +311,32 @@ As for `checkedRead`, your `checkedRead` should have no preconditions.
 ~~~
 ~~
 ~
-You can use `checkedRead` and your `checkedWrite` to replace `read`
-and `write` in `staticChecking`, so that now even
-the accesses to `passwd` are well-typed.
+これで、`staticChecking` の `read` と `write` を `checkedRead` と `checkedWrite` で置き換えることで、`passwd` へのアクセスが型付けできます。
 ~ ExerciseFragment {exname=ex1a-safe-read-write}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:DynamicChecking]
 ~
-This is secure because `checkedRead` and `checkedWrite` defer to
-runtime the same checks that were previously performed at compile time
-by F\*, and perform the IO actions only if those checks succeed.
+`checkedRead` と `checkedWrite` は F\* によってコンパイル時にあらかじめ行なわれたのと同じチェックを実行時に延期させ、それらのチェックが成功した場合のみその入出力アクションを行なうため、これは安全です。
 
-# Basics: Types and effects
+# 基本: 型と作用
 
-You may not have noticed them all, but our first example already covers
-several distinctive features of F\*. Let's take a closer look.
+全てを知らされていませんでしたが、F\* 独特の機能のいくつかを最初の例で既に見てきました。
+より詳細に見てみましょう。
 
-## Refinement types
+## リファインメント型
 
-One distinctive feature of F\* is its use of refinement types. We have
-already seen two uses of this feature, e.g, the type
-`:f:filename{canRead f}` is a *refinement* of the type `:filename`. It's
-a refinement because only a subset of the `:filename` values have this
-type, namely those that satisfy the `canRead` predicate. The
-refinement in the type of `FileIO.write` is similar. In traditional
-ML-like languages, such types are inexpressible.
+F\* の1つの特徴的な機能はリファインメント型の使用です。
+この機能を既に2度使いました。
+例えば、型 `:f:filename{canRead f}` は型 `:filename` の *リファインメント* です。
+`:filename` 値のサブセットのみがこの型、すなわち述語 `canRead` を満たす型を持つので、それはリファインメントなのです。
+`FileIO.write` の型のリファインメントも同様です。
+伝統的な ML 族の言語では、このような型は表現できません。
 
-In general, a refinement type in F\* has the form `:x:t{phi(x)}`, a
-refinement of the type `:t` to those elements `x` that satisfy the formula
-`:phi(x)`. For now, you can think of `:phi(x)` as any pure boolean valued
-expression. The full story is more general ([#sec-bool-versus-type]).
+一般に、F\* におけるリファインメント型は `:x:t{phi(x)}` の形を取ります。
+このときそれは型 `:t` のリファインメントで、その要素 `x` は式 `:phi(x)` を満たします。
+今のところ、`:phi(x)` は式を評価すると得られる純粋なブールであると考えることができます。
+詳細には [#sec-bool-versus-type] で、より一般化します。
 
-## Inferred types and effects for computations
+## 推論された型と計算のための作用
 
 ~CH
 Too much back and forth about type and effect _inference_ seems to be
@@ -352,56 +347,37 @@ obscuring the explanation. How about:
 (3) (type and) effect inference
 ~
 
-Although we didn't write down any types for functions like `canRead`
-or `canWrite`, F\* (like other languages in the ML family) infers
-types for your program (if F\* believes it is indeed type
-correct). However, what is inferred by F\* is more precise than what
-can be expressed in ML. For instance, in addition to inferring a type,
-F\* also infers the *side-effects* of an expression (e.g., exceptions,
-state, etc).
+`canRead` や `canWrite` のような関数の型を書きませんでしたが、(ML 族の他の言語と同様に) F\* は (その型が正しいなら) プログラムの型を推論します。
+けれども、F\* によって推論される型は ML で表現される型よりもより詳細です。
+例えば、型推論に加えて、F\* は式の *副作用* (例: 例外、状態など) も推論します。
 
-For instance, in ML `(canRead "foo.txt")` is inferred to have type `:bool`.
-However, in F\*, we infer `(canRead "foo.txt" : Tot bool)`. This
-indicates that `canRead "foo.txt"` is a pure total expression, which always
-evaluates to a boolean. For that matter, any expression that is
-inferred to have type-and-effect `:Tot t`, is guaranteed (provided the
-computer has enough resources) to evaluate to a `:t`-typed result,
-without entering an infinite loop; reading or writing the program's
-state; throwing exceptions; performing input or output; or, having any
-other effect whatsoever.
+例えば、ML では `(canRead "foo.txt")` は型 `:bool` を持つと推論されます。
+けれども、F\* では `(canRead "foo.txt" : Tot bool)` と推論します。
+これは `canRead "foo.txt"` 純粋で全域な式で、常にブールに評価されることを示しています。
+ついでに言うと、型と作用 `:Tot t` を持つと推論された式は、(コンピュータが十分なリソースを持っていれば) `:t` で型付けされた結果に評価されることが保証されます。
+そしてこの式は無限ループに入らず、プログラムの状態を読み書きせず、例外を発生せず、入出力を行なわず、その他の作用を引き起こしません。
 
-On the other hand, an expression like `(FileIO.read "foo.txt")` is
-inferred to have type-and-effect `:ML string`, meaning that this term
-may have arbitrary effects (it may loop, do IO, throw exceptions,
-mutate the heap, etc.), but if it returns, it always returns a
-string. The effect name `:ML` is chosen to represent the default,
-implicit effect in all ML programs.
+一方、`(FileIO.read "foo.txt")` のような式は型と作用 `:ML string` を持つと推論されます。
+これはこの項が任意の作用 (ループ、入出力、例外発生、ヒープの変更など) を持つ可能性があり、けれどももしそれがリターンしたなら、常に文字列を返すことを意味しています。
+作用の生 `:ML` はデフォルト、つまり全ての ML プログラムの暗黙の作用を表わしています。
 
-`:Tot` and `:ML` are just two of the possible effects. Some others
-include:
+`:Tot` と `:ML` は取りうる作用の全てではありません。
+それ以外に次のような作用があります:
 
-* `:Dv`, the effect of a computation that may diverge;
-* `:ST`, the effect of a computation that may diverge, read,
-  write or allocate new references in the heap;
-* `:Exn`, the effect of a computation that may diverge
-  or raise an exception.
+* `:Dv`、分岐を共なう計算の作用
+* `:ST`、分岐やヒープ中の参照の読み書きや確保を共なう計算の作用
+* `:Exn`、分岐や例外を共なう計算の作用
 
 ~CH
 Should we add Ghost to the list of effects or would that be too
 confusing at this point?
 ~
 
-The effects `:{Tot, Dv, ST, Exn, ML}` are arranged in a lattice,
-with `:Tot` at the
-bottom (less than all the others), `:ML` at the top (greater than all
-the others), and with `:ST` unrelated to `:Exn`. This means that a
-computation with a particular effect can be treated as having any
-other effect that is greater than it in the effect ordering---we call
-this feature *sub-effecting*.
+作用 `:{Tot, Dv, ST, Exn, ML}` は束として配置されます。
+`:Tot` は (その他全ての作用より下位である) 下限に、`:ML` は (その他全ての作用より上位である) 上限に配置され、`:ST` と `:Exn` は関係がありません。
+これは特定の作用を共なう計算が、作用の順序においてその作用より大きいその他の作用を持つと扱えることを意味しています---私達はこの機能を *サブ作用* と呼んでいます。
 
-In fact, you can configure F\* with your own family of effects and effect
-ordering and have F\* infer those effects for your programs---but that's
-more advanced and beyond the scope of this tutorial.
+実際、F\* では、独自の作用と作用の順序を構成でき、F\* にそれらの作用を推論させることができます---しかしそれはより高度な機能で、このチュートリアルの範囲外です。
 ~CH
 Previous claim seems too strong to me. It misses the point that F\*
 effects are primitive and fixed, and in a way the lattice of effects
@@ -430,27 +406,22 @@ configurable). The explanation above seems to start with the first
 point of view and end up with the second.
 ~
 
-From now on, we'll just refer to a type-and-effect pair (e.g. `:Tot int`
-where `:Tot` is the effect and `:int` is the result type), as a
-type<!-- unused: , or sometimes as a *computation* type -->.
+今後は (例えば `:Tot` が作用で `:int` が結果の型である `:Tot int` のような) 型と作用のペアを、単に型と呼ぶことにします。<!-- unused: , or sometimes as a *computation* type -->.
 
-## Function types
+## 関数型
 
-F\* is a functional language, so functions are first-class values that
-are assigned function types. For instance, in ML the function `is_positive`
-testing whether an integer is positive is given type `:int -> bool`,
-i.e. it is a function taking an integer argument and producing a
-boolean result. Similarly, a maximum function on integers `max` is given
-type `:int -> int -> int`, i.e. it is a function taking two integers
-and producing an integer. Function types in F\* are more precise and
-capture not just the types of the arguments and the result, but also
-the effect of the function's body. As such, every function value has a
-type of the form `:t_1 -> ... -> t_n -> E t`, where `:t_1 .. t_n` are the
-types of each of the arguments; `:E` is the effect of its body; and
-`:t` is the type of its result. (*Note to the experts: We
-will generalize this to dependent functions and indexed effects
-progressively.) The pure functions
-above are given a type using effect `Tot` in F\*:
+F\* は関数型言語で、関数は関数型が割り当てられた第一級の値です。
+例えば ML では、ある整数が正であるか判別する関数には型 `:int -> bool` が与えられます。
+すなわち、この関数は整数を引数に取り、ブールを結果として生成します。
+同様に、整数の最大値を計算する関数 `max` には型 `:int -> int -> int` が与えられます。
+すなわち、この関数は2つの整数を取り、1つの整数を生成します。
+F\* における関数型はより詳細で、引数と返り値の型だけでなく、関数本体の作用も捕捉します。
+このように、全ての関数値は `:t_1 -> ... -> t_n -> E t` のような型を持ちます。
+このとき `:t_1 .. t_n` は引数それぞれの型で;
+`:E` は関数本体の作用;
+そして `:t` はその結果の型です。
+(*上級者への注意: これは作用でインデックスされた依存した関数に一般化されます。)
+F\* では、上記の純粋関数には作用 `Tot` を使った型が与えられます:
 ```
 val is_positive : int -> Tot bool
 let is_positive i = i > 0
@@ -458,24 +429,19 @@ let is_positive i = i > 0
 val max : int -> int -> Tot int
 let max i1 i2 = if i1 > i2 then i1 else i2
 ```
-Impure functions, like reading the contents of a file,
-are given corresponding effects:
+ファイルの内容を読むような、純粋でない関数には同様に作用が与えられます:
 ```
 val read : filename -> ML string
 ```
 
-F\* is a _call-by-value_ functional language (like OCaml and F\#, and
-unlike Haskell and Coq), so function arguments are fully evaluated to
-values before being passed to the function. Values have no (immediate) effect,
-thus the types of a function's arguments have no effect annotation. On
-the other hand, the body of a function may perform some non-trivial
-computation and so the result is always given both a type and an
-effect, as explained above.
+(OCaml や F\# と同様に、Haskell や Coq と異なり) F\* は _値渡し_ の関数型言語で、関数の引数はその関数に渡される前に、完全に評価されて値になります。
+値は (直接の) 作用を持たないので、関数の引数の型は作用の注釈を持ちません。
+一方で、関数の本体は非自明な計算を行なうかもしれません。
+そのため上記で説明したように、その結果は常に型と作用の両方で与えられます。
 
 ~Exercise
-As you could see above, we use `val` to ask F\* to check that a
-definition has a certain expected type.  Write down the expected types
-for `canRead` and `canWrite` from [#sec-policy] and ask F\* to check it for you.
+上記で見てきたように、定義が予想される型を持つことを F\* にチェックさせるために `val` を使います。
+`canRead` と `canWrite` について [#sec-policy] から予測される型を書いて、それをチェックするよう F\* に支持してください。
 ~~ ExerciseFragment {exname=ex2a-can-read-write-types}
 [INCLUDE=code/exercises/ex2a-can-read-write-types.fst]
 ~~
@@ -486,20 +452,16 @@ val canWrite: filename -> Tot bool
 ~~
 ~
 
-### The default effect is `ML`
+### デフォルトの作用は `ML`
 
-Without further annotation, F\* (sometimes conservatively) infers
-functions that may perform IO or functions that are not
-provably terminating to have the `:ML` effect. So, both
-functions below are inferred to have the type `:(int -> ML int)`.
-(Note: Recursive functions are defined using `let rec`
-in ML-like languages.)
+注釈がない場合、F\* は、入出力を行なうかもしれないか、停止しないかもしれない関数を、作用 `:ML` を持つと (ときに保守的に) 推論します。
+そのため、下記どちらの関数も型 `:(int -> ML int)` を持つと推論されます。
+(注意: 再帰関数は ML 族の言語では `let rec` で定義されます。)
 
     let hello_incr i = IO.print_string "hello"; i + 1
     let rec loop i = i + loop (i - 1)
 
-If we provide explicit annotations we can give these functions more
-precise types:
+もし明示的な注釈を与えると、これらの関数により正確な型を割り当てることができます:
 
     val hello_incr i : int -> IO int
     let hello_incr i = IO.print_string "hello"; i + 1
@@ -507,10 +469,9 @@ precise types:
     val loop : int -> Dv int
     let rec loop i = i + loop (i - 1)
 
-Since we often port programs from ML to F\*, we choose the default effect
-to be `ML` and typically don't even write it. So, you could have written
-the usual ML signature for `hello_incr` and `loop` as shown below, which
-is just a synonym for the more explicit `:(int -> ML int)`.
+プログラムを ML から F\* に移植するために、私達はデフォルトの作用を `ML` に選び、通常はそれを書かずに済むようにしました。
+そのため `hello_incr` と `loop` を表わす通常の ML シグニチャを以下の示すように書くことができます。
+これはより明示的な `:(int -> ML int)` と単に同義です。
 
     val hello_incr: int -> int
     val loop: int -> int
@@ -521,30 +482,27 @@ Could start by explaining currying, then functions taking functions
 as arguments (e.g. sorting).
 ~
 
-### Computing functions
+### 計算する関数
 
-_Skip this section on a first read, if you are new to functional programming._
+_もし関数型プログラミングの初学者なら、はじめて読む際にこの章を飛ばしてください。_
 
-Sometimes it is useful to return a function after performing some
-computation. For example, here is a function that makes a new counter,
-initializing it to `init`.
+ときに、なんらかの計算を行なった後に関数を返すことが有用です。
+例えば、次の関数は新しいカウンタを作り、それを `init` で初期化します。
 
     let new_counter init =
       let c = ST.alloc init in
       fun () -> c := !c + 1; !c
 
-F\* infers that `new_counter` has type `:int -> ST (unit -> ST int)`,
-the type of a function that given an integer, may read, write or
-allocate references, and then returns a `:unit -> ST unit`
-function. You can write down this type and have F\* check it; or,
-using sub-effecting, you can write the type below and F\* will check
-that `new_counter` has that type as well.
+F\* は `new_counter` が型 `:int -> ST (unit -> ST int)` を持つと推論します。
+型によるとこの関数は、整数が与えられ、参照を読み書きもしくは確保するかもしれず、それから `:unit -> ST unit` 型の関数を返します。
+この型を書いて、F\* にチェックさせることができます;
+もしくはサブ作用を使って、下記のように型を書いて `new_counter` が上手く型付けできることを F\* にチェックさせることもできます。
 
     val new_counter: int -> ML (unit -> int)
 
-Note, the type above, a shorthand for `:int -> ML (unit -> ML int)`,
-is *not* the same as `:int -> unit -> int`. The latter is a shorthand
-for `:int -> Tot (unit -> ML int)`.
+上記の型、`:int -> ML (unit -> ML int)` の短縮形は、`:int -> unit -> int` と同じでは *ありません* 。
+注意してください。
+後者は `:int -> Tot (unit -> ML int)` の短縮形です。
 
 # First proofs about functions on integers { #sec-firstproofs }
 
