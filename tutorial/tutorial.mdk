@@ -18,9 +18,9 @@ Package       : fullpage
 
 ~Exercise     : @h1-exercise=lower-case @h1-exercise label="@h1@h1-exercise"
                 margin-left=1em
-                before="[**Exercise &label;: **]{margin-left=-1em}&br;"
+                before="[**練習問題 &label;: **]{margin-left=-1em}&br;"
 
-~Answer       : replace="[answer]{.answer-link}&br;~Begin AnswerContent&nl;&source;&nl;~End AnswerContent&nl;"
+~Answer       : replace="[回答]{.answer-link}&br;~Begin AnswerContent&nl;&source;&nl;~End AnswerContent&nl;"
                 margin-top=-1em tight
 ~AnswerContent: border-style=solid border-width=1px border-color=black padding=0.5ex
 
@@ -61,8 +61,8 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
   text-decoration: underline;
   color: blue;
 }
-.answer.view .answer-link:before {
-  content: "hide ";
+.answer.view .answer-link:after {
+  content: "を隠す";
 }
 .answercontent p:first-child {
   margin-top: 0em;
@@ -504,7 +504,7 @@ F\* は `new_counter` が型 `:int -> ST (unit -> ST int)` を持つと推論し
 注意してください。
 後者は `:int -> Tot (unit -> ML int)` の短縮形です。
 
-# First proofs about functions on integers { #sec-firstproofs }
+# 整数を扱う関数の最初の証明 { #sec-firstproofs }
 
 <!--
 Main ideas in this section:
@@ -518,15 +518,12 @@ Main ideas in this section:
   - intrinsic vs extrinsic (ie. at definition time vs. after the fact)
 -->
 
-Our first example on access control lists illustrated how F\*'s type
-system can be used to automatically check useful security properties for
-us. But, before we can do more interesting security-related programming
-and verification, we will need to understand more about the basics of
-F\*. We'll shift back a gear now and look at programming and proving
-properties of simple functions on integers.
+アクセスコントロールリストの最初の例では、どのように F\* の型システムがセキュリティ属性の自動的な検査に使うことができるか示しました。
+けれども、より興味深いセキュリティに関連したプログラミングと検証を行なう前に、F\* の基礎についてより理解を深める必要があります。
+ここで戻って、整数を扱う単純な関数のプログラミングと性質の証明を見てみましょう。
 
 
-## Statically checked assertions
+## 静的に検査される表明
 
 ~CH
 These example assertions are horrible because
@@ -557,94 +554,77 @@ Generally we should strive to make all the code in this tutorial be valid F\*
 code that we can directly load in the editor.
 ~
 
-One way to prove properties about your code in F\* is to write assertions.
+F\* のコードにおける性質を証明する1つの方法は表明を書くことです。
 
     let a = assert (max 0 1 = 1)
 
-Our first assertion is an obvious property about `max`. You may have seen
-a construct called `assert` in other languages---typically, it is used to
-check a property of your code *at runtime*, raising an assertion-failed
-exception if the asserted condition is not `true`.
+最初の表明は `max` に関する明らかな性質です。
+別の言語で `assert` と呼ばれる構成物を見たことがあるかもしれません---一般に、そのような `assert` はコードの性質を *実行時に* 検査するために使われ、その表明条件が `true` でない場合には表明に失敗した例外が発生します。
 
-In F\*, assertions have no runtime significance. Instead, F\* tries to
-prove statically (i.e., before compiling your program) that the asserted
-condition is true, and hence, could never fail even if it were tested at
-runtime.
+F\* では、表明は実行時の意味を持ちません。
+その代わりに、F\* はその表明条件が真であることを静的に証明しようとします。
+そのため実行時に検査されたとしても決っして失敗しません。
 
-In this case, the proof that `max 0 1 = 1` is fairly easy. Under the
-covers, F\* translates the definition of `max` and the asserted property
-to a theorem prover called [Z3], which then proves the property
-automatically.
+この場合、`max 0 1 = 1` の証明は簡単です。
+裏で F\* は `max` の定義と表明された性質を [Z3] と呼ばれる定理証明器に渡して、その性質を自動的に証明します。
 
 [Z3]: http://z3.codeplex.com/
 
-We can assert and automatically check a more general property about `max`. For example:
+`max` のより一般的な性質を表明して、自動的に検査することができます。例えば次のようになります:
 
     let a = assert (forall x y. max x y >= x
                      && max x y >= y
                      && (max x y = x || max x y = y))
 
-## Factorial and Fibonacci functions
+## 階乗とフィボナッチ関数
 
-Let's take a look at the factorial function:
+階乗関数を見てみましょう:
 
     let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
 
-As we said earlier, without further annotation, F\* infers `:int -> int`
-as the type of this function, which is a shorthand for
-`:int -> ML int`---meaning that F\* does not attempt to
-automatically prove that `factorial` (or any recursive function, for that
-matter) is in fact a pure, total function. Factorial is actually not a total
-function on arbitrary integers! Think about `factorial (-1)`.
+以前解説した通り、注釈がない場合、F\* はこの関数の型を `:int -> int` であると推論します。これは `:int -> ML int` の短縮形です---これは F\* がこの `factorial` が (もしくはどのような再帰関数が) 純粋で全域関数であることを自動的に証明しようとしないことを意味しています。
+実際、階乗は任意の整数に対して全域関数ではないのです!
+`factorial (-1)` を考えてみましょう。
 
 ~ Remark
-F\*'s `:int` type represents unbounded mathematical integers.
+F\* の `:int` 型は任意精度の整数を表わします。
 ~
 
-The `factorial` function is, however, a total function on non-negative
-integers. We can ask F\* to check that this is indeed the case by
-writing:
+けれども、`factorial` 関数は非負の整数については全域関数です。
+これを実際に書いた場合、検査を F\* に支持できます:
 
     val factorial: x:int{x>=0} -> Tot int
 
-The line above says several things:
+上記の行にはいくつかの主張があります:
 
-* `factorial` is a value (that's the '`val factorial`' part)
+* `factorial` は値です ('`val factorial`' 部分で主張しています)
 
-* It is a *function* (that's the arrow type '`->`')
+* それは *関数* です (矢印型 '`->`' で主張しています)
 
-* It can only be applied to integers `x` that are greater than or
-  equal to `0` (that's the refinement type '`x:int{x>=0}`')
+* それは `0` 以上の整数 `x` に対してのみ適用できます (リファインメント型 '`x:int{x>=0}`' で主張しています)
 
-* When applied to `x` it always terminates, has no effects (the
-'`:Tot`' part), and returns an integer (the result type '`:int`')
+* `x` に適用されると、それは常に停止し、作用を持たず ('`:Tot`' 部分で主張しています)、そして整数を返します (返り値の型 '`:int`' で主張しています)
 
-Once we write this down, F\* automatically proves that `factorial`
-satisfies all these properties. The main interesting bit to prove, of
-course, is that `factorial x` actually does terminate when `x` is
-non-negative. We'll get into the details of how this is done in
-section [#sec-termination], but, for now, it suffices to know that in
-this case F\* is able to prove that every recursive call is
-on a non-negative number that is strictly smaller than the argument of
-the previous call. Since this cannot go on forever (we'll eventually hit
-the base case `0`), F\* agrees with our claim about the type of
-`factorial`.
+このように書くと、F\* は `factorial` がこれら全ての性質を満たすことを自動的に証明します。
+もちろん、証明における主な興味は `x` が非負の場合に `factorial x` が実際に停止するかどうかです。
+これがどのように行なわれるかその詳細は章 [#sec-termination] で議論しますが、この場合 F\* が非負な数値に対する全ての再帰的な呼び出しは以前の呼び出しでの引数より厳密に小さくなることを証明できると理解すれば十分です。
+これは無限に続くかない (最終的に基底ケース `0` に収束する) ので、F\* は `factorial` の型に関する主張に同意します。
 
-The type of non-negative integers (or natural numbers) is common enough
-that you can define an abbreviation for it (in fact, F\* already does
-this for you in its standard prelude).
+非負な整数 (もしくは自然数) の型はありふれたもので、それは省略して定義できます。
+(実際、F\* では標準の prelude 中でこれは既に定義済みです。)
 
     type nat = x:int{x>=0}
 
 ~ Exercise
-What are some other correct types you can give to `factorial`? Try
-writing them and see if F\* agrees with you.
-Try describing in words what each of those types mean.
+`factorial` には他にどのような型を与えられるでしょうか？
+それらを書いて、F\* が同意するかどうか確認してください。
+それらの型の意味を言葉で表現してください。
 ~~ ExerciseFragment {exname=ex3a-factorial-types}
 [INCLUDE=code/exercises/ex3a-factorial-types.fst:FactorialTypes]
 ~~
 ~~ Answer
-There are many possible correct types for `factorial`. Here are a few:
+`factorial` に対して多くの正しい型があります。
+次はその内のいくつかです:
 ~~~ SolutionFragment {exname=ex3a-factorial-types}
 val factorial: int -> int                     (* inferred by default *)
 val factorial: int -> ML int                  (* same as above *)
@@ -675,7 +655,7 @@ uncomparable.  So no, subtyping is not a total order.
 -->
 
 ~ Exercise
-Give several types for the fibonacci function.
+フィボナッチ関数に対して型をいくつか与えてください。
 ~~ ExerciseFragment {exname=ex3b-fibonacci}
 let rec fibonacci n =
   if n <= 1 then 1 else fibonacci (n - 1) + fibonacci (n - 2)
@@ -685,30 +665,22 @@ let rec fibonacci n =
 ~~
 ~
 
-## Lemmas
+## 補題
 
-Let's say you wrote the `factorial` function and gave it the type
-`:(nat -> Tot nat)`. Later, you care about some other property about
-`factorial`, e.g., that if `x > 2` then `factorial x > x`. One option is
-to revise the type you wrote for `factorial` and get F\* to reprove that
-it has this type. But this isn't always feasible. What if you also wanted
-to prove that if `x > 3` then `factorial x > 2 * x`: clearly, polluting
-the type of `factorial` with all these properties that you may or may not
-care about is impractical.
+`factorial` 関数を書いて、型 `:(nat -> Tot nat)` を与えたとしましょう。
+すると例えば `x > 2` ならば `factorial x > x` といったような、他の性質が気になるでしょう。
+1つの方法は `factorial` の型を修正して、その型を F\* に再度証明させることです。
+しかしこれは常に柔軟なわけではありません。
+`x > 3` ならば `factorial x > 2 * x` も証明したいとしたらどうなるでしょうか:
+`factorial` の型に対するこれらの性質による汚染は、明確に実用的ではありません。
 
-However, F\* will allow you to write other functions (we call them
-lemmas) to prove more properties about `factorial`, after you've defined
-`factorial` and given it some generally useful type like
-`:nat -> Tot nat`.
+けれども、`factorial` に関するさらなる性質を証明するために、`factorial` を定義して `:nat -> Tot nat` のような一般的な型を与えた後に、F\* では (補題と呼ばれる) 他の関数を書くことができます。
 
-A lemma is a _ghost_ total function that always returns the single `:unit` value
-`()`. As such, computationally, lemmas are useless---they have no effect
-and always return the same value, so what's the point? The point is that
-the type of the value returned by the lemma carries some useful
-properties about your program.
+補題は、常に単純な `:unit` の値 `()` を返す _ゴースト_ 全域関数です。
+計算上、補題それ自体は役立ちません---それらは作用を持たず、常に同じ値を返します。それならばポイントはなんでしょうか？
+そのポイントは、補題によって返される値の型がプログラムに関する有用な性質を有していることにあります。
 
-As a first lemma about `factorial`, let's prove that it always
-returns a positive number.
+`factorial` に関する最初の補題として、それが正の数を常に返すことを証明してみましょう。
 
     val factorial_is_positive: x:nat -> GTot (u:unit{factorial x > 0})
     let rec factorial_is_positive x =
@@ -716,20 +688,18 @@ returns a positive number.
       | 0 -> ()
       | _ -> factorial_is_positive (x - 1)
 
-The statement of the lemma is the type given to `factorial_is_positive`,
-a ghost total function on `x:nat` which returns a unit, but with the refinement
-that `factorial x > 0`. The next three lines define
-`factorial_is_positive` and proves the lemma using a proof by induction
-on `x`. The basic concept here is that by programming total functions, we
-can write proofs about other pure expressions. We'll discuss such proofs
-in detail in the remainder of this section.
+この補題のステートメントは `factorial_is_positive` に与えられた型です。
+それは `x:nat` に対するゴースト全域関数で、リファインメント `factorial x > 0` と共にユニットを返します。
+次の3行で `factorial_is_positive` を定義しており、`x` に対する帰納による証明を使ってこの補題を証明しています。
+ここでの基本的なコンセプトは、全域関数を使ったプログラミングによって他の純粋な式に関する証明を書けることです。
+この章の残りでこのような証明について詳細に議論します。
 
 ~ Remark
-In F\* an expression being ghost (computationally irrelevant) is an effect. The
-effect `GTot` in the type of `factorial_is_positive` indicates that it is a ghost, total function.
+F\* では (計算上無意味な) ゴーストであるような式は1つの作用です。
+`factorial_is_positive` の型における作用 `GTot` は、それがゴーストで全域関数であることを示しています。
 ~
 
-### Dependent function types
+### 依存関数型
 
 ~CH
 Lemmas don't seem like the most intuitive way of introducing dependent
@@ -737,52 +707,41 @@ functions.  Can we find a more computationally relevant thing first?
 See `max_ref_type` in `code/max.fst`?
 ~
 
-Let's start by looking a little closer at the statement of the lemma.
+この補題のステートメントをもう少しよく見てみましょう。
 
     val factorial_is_positive: x:nat -> GTot (u:unit{factorial x > 0})
 
-This is a *dependent function type* in F\*. Why *dependent*?
-Well, the type of the result depends on the _value_ of the parameter
-`x:nat`. For example, `factorial_is_positive 0` has the type
-`:Tot (u:unit{factorial 0 > 0))`, which is different from the type of
-`factorial_is_positive 1`.
+これは F\* における *依存関数型* です。
+なぜ *依存* するのでしょうか？
+その結果の型はパラメータ `x:nat` の _値_ に依存しているのです。
+例えば、`factorial_is_positive 0` は型 `:Tot (u:unit{factorial 0 > 0))` を持ちます。
+これは `factorial_is_positive 1` の型と異なります。
 
-Now that we've seen dependent functions, we can elaborate a bit more
-on the general form of function types:
+依存関数を紹介したので、関数型の一般的な形を少し詳しく見てみましょう:
 
 ~ Center
 `:x_1:t_1 -> ... -> x_n:t_n[x_1 ... x\(~n-1~\)] -> E t[x_1 ... x_n]`
 ~
-Each of a function's formal parameters are named
-`x\(~i~\)` and each of these names is in scope to the right of the first
-arrow that follows it. The notation `:t[x_1 ... x_m]` indicates that
-the variables `:x_1 ... x_m` may appear free in `:t`.
+関数の正規のパラメータそれぞれは `x\(~i~\)` と名付けられていて、それらの名前のスコープはそれに続く最初の矢印の右側です。
+表記 `:t[x_1 ... x_m]` は `:t` 中に変数 `:x_1 ... x_m` が自由出現することを示しています。
 
-### Some syntactic sugar for refinement types and lemmas
+### リファインメント型と補題に対するシンタックスシュガー
 
-How shall we specify that `factorial` is strictly greater than
-its argument when its argument is greater than 2? Here's a first cut:
+How shall we specify that `factorial` is strictly greater than its argument when its argument is greater than 2?
+Here's a first cut:
 
     val factorial_is_greater_than_arg_1: x:(y:nat{y > 2}) -> GTot (u:unit{factorial x > x})
 
-This does the job, but the type of the function's argument is a bit
-clumsy, since we needed two names: `y` to restrict the domain to natural
-numbers greater than `2` and `x` to speak about the argument in the
-result type. This pattern is common enough that F\* provides some
-syntactic sugar for it---we have seen it already in passing in the first
-type we gave to `factorial`. Using it, we can write the following type,
-which is equivalent to, but more concise than, the type above.
+This does the job, but the type of the function's argument is a bit clumsy, since we needed two names: `y` to restrict the domain to natural numbers greater than `2` and `x` to speak about the argument in the result type.
+This pattern is common enough that F\* provides some syntactic sugar for it---we have seen it already in passing in the first type we gave to `factorial`.
+Using it, we can write the following type, which is equivalent to, but more concise than, the type above.
 
     val factorial_is_greater_than_arg_2: x:nat{x > 2} -> GTot (u:unit{factorial x > x})
 
-Another bit of clumsiness that you have no doubt noticed is the result
-type of the lemmas which include a refinement of the
-`:unit` type. To make this lighter, F\* provides the `:Lemma` keyword which
-can be used in place of the `:GTot` effect.
+Another bit of clumsiness that you have no doubt noticed is the result type of the lemmas which include a refinement of the `:unit` type.
+To make this lighter, F\* provides the `:Lemma` keyword which can be used in place of the `:GTot` effect.
 
-For example, the type of `factorial_is_greater_than_arg_2` is equivalent to the
-type of `factorial_is_greater_than_arg_3` (below), which is just a little
-easier to read and write.
+For example, the type of `factorial_is_greater_than_arg_2` is equivalent to the type of `factorial_is_greater_than_arg_3` (below), which is just a little easier to read and write.
 
     val factorial_is_greater_than_arg_3: x:nat{x > 2} -> Lemma (factorial x > x)
 
@@ -791,8 +750,7 @@ We can also write it in the following way, when that's more convenient:
     val factorial_is_greater_than_arg_4: x:nat -> Lemma (requires (x > 2))
                                                   (ensures (factorial x > x))
 
-The formula after `requires` is the _pre-condition_ of the
-function/lemma, while the one after `ensures` is its _post-condition_.
+The formula after `requires` is the _pre-condition_ of the function/lemma, while the one after `ensures` is its _post-condition_.
 
 ### A simple lemma proved by induction, in detail
 

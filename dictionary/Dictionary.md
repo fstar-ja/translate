@@ -1,7 +1,16 @@
 # 用語辞書
 
 ## A
+
+### Appear free
+
+"自由出現"
+
 ## B
+
+### Base case
+
+"基底ケース"
 
 ### Boolean
 
@@ -14,6 +23,11 @@
 "値渡し"
 
 ## D
+
+### Dependent function type
+
+"依存関数型"
+
 ## E
 
 ### Effect
@@ -26,12 +40,21 @@
 
 ## F
 ## G
+
+### Ghost
+
+"ゴースト"
+
 ## H
 ## I
 
 ### Impure
 
 "純粋でない"
+
+### Induction
+
+"帰納"
 
 ### IO
 
@@ -40,6 +63,11 @@
 ## J
 ## K
 ## L
+
+### Lemma
+
+"補題"
+
 ## M
 ## N
 ## O
@@ -56,6 +84,10 @@
 
 "リファインメント型"
 
+### Remark
+
+"コメント"
+
 ## S
 
 ### Security-sensitive
@@ -65,6 +97,10 @@
 ### Side-effect
 
 "副作用"
+
+### Statement
+
+"ステートメント"
 
 ### Sub-effecting
 
@@ -81,6 +117,11 @@
 "型シノニム"
 
 ## U
+
+### Unit
+
+"ユニット"
+
 ## V
 ## W
 ## X
