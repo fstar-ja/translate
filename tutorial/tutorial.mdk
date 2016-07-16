@@ -727,59 +727,55 @@ See `max_ref_type` in `code/max.fst`?
 
 ### リファインメント型と補題に対するシンタックスシュガー
 
-How shall we specify that `factorial` is strictly greater than its argument when its argument is greater than 2?
-Here's a first cut:
+引数が2より大きいとき、`factorial` がその引数より厳密に大きいことをどうやって明記すべきでしょうか？
+次は最初の試みです:
 
     val factorial_is_greater_than_arg_1: x:(y:nat{y > 2}) -> GTot (u:unit{factorial x > x})
 
-This does the job, but the type of the function's argument is a bit clumsy, since we needed two names: `y` to restrict the domain to natural numbers greater than `2` and `x` to speak about the argument in the result type.
-This pattern is common enough that F\* provides some syntactic sugar for it---we have seen it already in passing in the first type we gave to `factorial`.
-Using it, we can write the following type, which is equivalent to, but more concise than, the type above.
+これは上手く行きますが、2つの名前が必要になるため、関数の引数の型は少し不恰好です:
+`y` はそのドメインを `2` より大きい自然数に制限するためで、`x` は返り値の型で引数に言及するためです。
+このパターンはありふれていて、F\* はそのためのシンタックスシュガーを提供しています---`factorial` に与えた最初の型で既に見てきました。
+それを使うことで、上記の型と等価で、より簡潔な次のような型を書くことができます。
 
     val factorial_is_greater_than_arg_2: x:nat{x > 2} -> GTot (u:unit{factorial x > x})
 
-Another bit of clumsiness that you have no doubt noticed is the result type of the lemmas which include a refinement of the `:unit` type.
-To make this lighter, F\* provides the `:Lemma` keyword which can be used in place of the `:GTot` effect.
+もう1つの疑いようのない不恰好な点は補題の返り値の型で、それは `:unit` 型のリファインメントを含んでいます。
+これを簡潔にするために、F\* は `:Lemma` キーワードを提供していて、作用 `:GTot` の代わりに使うことができます。
 
-For example, the type of `factorial_is_greater_than_arg_2` is equivalent to the type of `factorial_is_greater_than_arg_3` (below), which is just a little easier to read and write.
+例えば、`factorial_is_greater_than_arg_2` の型は (下記の) `factorial_is_greater_than_arg_3` の型と等価で、それは少し読み書きしやすいでしょう。
 
     val factorial_is_greater_than_arg_3: x:nat{x > 2} -> Lemma (factorial x > x)
 
-We can also write it in the following way, when that's more convenient:
+また都合が良ければ、次のように書くこともできます:
 
     val factorial_is_greater_than_arg_4: x:nat -> Lemma (requires (x > 2))
                                                   (ensures (factorial x > x))
 
-The formula after `requires` is the _pre-condition_ of the function/lemma, while the one after `ensures` is its _post-condition_.
+`requires` の後の式は関数/補題の _事前条件_ で、`ensures` の後の式はその _事後条件_ です。
 
-### A simple lemma proved by induction, in detail
+### 帰納によって証明された単純な補題について詳細に
 
-Now, let's look at a proof of `factorial_is_greater_than_arg` in detail. Here it is:
+ここで `factorial_is_greater_than_arg` の証明を詳細に見てみましょう。
+それは次のようになります:
 
     let rec factorial_is_greater_than_arg x =
       match x with
       | 3 -> ()
       | _ -> factorial_is_greater_than_arg (x - 1)
 
-The proof is a recursive function (as indicated by the `let rec`); the
-function is defined by cases on `x`.
+この証明は (`let rec` で示された) 再帰関数です;
+この関数は `x` に対する場合分けで定義されています。
 
-In the first case, the argument is `3`; so, we need to prove that
-`factorial 3 > 3`. F\* generates a proof obligation corresponding to this
-property and asks [Z3] to see if it can prove it, given the definition of
-`factorial` that we provided earlier---Z3 figures out that by
-`factorial 3 = 6` and, of course, `6 > 3`, and the proof for this case is
-done. This is the base case of the induction.
+最初のケースは、引数が `3` で;
+そのため `factorial 3 > 3` を証明する必要があります。
+F\* はこの性質に相当する証明を生成し、前に提供された `factorial` の定義が与えられたとき、それを証明できるかどうかを確かめるよう [Z3] に要求します---Z3 は `factorial 3 = 6` であり、もちろん `6 > 3` で、このケースの証明は完了します。
+これはこの帰納の基底ケースです。
 
-The cases are taken in order, so if we reach the second case, then we
-know that the first case is inapplicable, i.e., in the second case, we
-know from the type for `factorial_is_greater_than_arg` that `x:nat{x > 2}`, and
-from the inapplicability of the previous case that `x <> 3`. In other
-words, the second case is the induction step and handles the proof when
-`x > 3`.
+ケースは順番に解釈されるため、2番目のケースに辿り着いた場合、最初のケースに当てはまらないことを知っています。
+すなわち、2番目のケースでは `factorial_is_greater_than_arg` の型から `x:nat{x > 2}` を、前のケースに当てはまらなかったので `x <> 3` であることを知っています。
+別の言い方をすると、2つ目のケースは帰納ステップで、`x > 3` のときの証明を扱います。
 
-Informally, the proof in this case works by using the induction
-hypothesis, which gives us that
+くだけた表現をすると、このケースの証明は、次で与えられる帰納法の下腿を使って行なわれます:
 ```
 forall n, 2 < n < x ==> factorial n > n
 ```
