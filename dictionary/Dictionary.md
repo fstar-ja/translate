@@ -2,6 +2,10 @@
 
 ## A
 
+### Admit
+
+"Admit"
+
 ### Appear free
 
 "自由出現"
@@ -22,11 +26,23 @@
 
 "値渡し"
 
+### Coerce
+
+"変換"
+
+### Conjunction
+
+"論理積"
+
 ## D
 
 ### Dependent function type
 
 "依存関数型"
+
+### Disjunction
+
+"論理和"
 
 ## E
 
@@ -34,11 +50,20 @@
 
 "作用"
 
+### Existential quantifier
+
+"存在量化"
+
 ### Extract
 
 "エクストラクト"
 
 ## F
+
+### Universal quantifier
+
+"全称量化"
+
 ## G
 
 ### Ghost
@@ -47,6 +72,10 @@
 
 ## H
 ## I
+
+### Implication
+
+"論理包含"
 
 ### Impure
 
@@ -70,6 +99,11 @@
 
 ## M
 ## N
+
+### Negation
+
+"否定"
+
 ## O
 ## P
 
@@ -78,6 +112,11 @@
 "純粋関数"
 
 ## Q
+
+### Quantifier
+
+"量化"
+
 ## R
 
 ### Refinement type

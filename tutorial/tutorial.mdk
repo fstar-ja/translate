@@ -779,30 +779,23 @@ F\* はこの性質に相当する証明を生成し、前に提供された `fa
 ```
 forall n, 2 < n < x ==> factorial n > n
 ```
-and our goal is to prove `factorial x > x`. Or, equivalently, that
-`x * factorial (x - 1) > x`, knowing that `factorial (x - 1) > x - 1`; or
-that `x*x - x > x`---which is true for `x > 3`.
-Let's see how this works formally in F\*.
+そしてゴールは `factorial x > x` を証明することです。
+もしくは等価に、`factorial (x - 1) > x - 1` が既知であるときに `x * factorial (x - 1) > x` を証明することでう;
+さらにもしくは `x*x - x > x` を証明することになり---これは `x > 3` のとき真です。
+どのように F\* でこれが形式的に行なわれるか見てみましょう。
 
-When defining a total recursive function, the function being defined
-(`factorial_is_greater_than_arg` in this case) is available for use in the body
-of the definition, but only at a type that ensures that the recursive
-call will terminate. In this case, the type of `factorial_is_greater_than_arg` in
-the body of the definition is:
+全域再帰関数を定義するとき、定義されるその関数 (この場合 `factorial_is_greater_than_arg`) はその定義の本体で使うことができます。
+しかしそれは再帰呼び出しが停止することを確認できる型である場合のみです。
+このケースでは、定義本体中の `factorial_is_greater_than_arg` の型は:
 
     n:nat{2 < n && n < x} -> Lemma (factorial n > n)
 
-This is, of course, exactly our induction hypothesis. By calling
-`factorial_is_greater_than_arg (x - 1)` in the second case, we, in effect, make
-use of the induction hypothesis to prove that
-`factorial (x - 1) > x - 1`, provided we can prove that
-`2 < x - 1 && x - 1 < x`---we give this to Z3 to prove, which it can,
-since in this case we know that `x > 3`. Finally, we have to prove the
-goal `factorial x > x` from the `x > 3` and the property we obtained
-from our use of the induction hypothesis: again, Z3 proves this easily.
+これはもちろん正確に帰納法の仮定です。
+2番目のケースで `factorial_is_greater_than_arg (x - 1)` を呼び出すことで、実質的に帰納法の仮定を使用して `factorial (x - 1) > x - 1` を証明し、`2 < x - 1 && x - 1 < x` を証明できます---これを Z3 に証明させると、このケースでは `x > 3` であることを知っているのでそれは成功します。
+最後に、`x > 3` と 帰納法の仮定を使って得られた性質からゴールである `factorial x > x` を証明しなければなりません: Z3 は再びこれをたやすく証明してくれます。
 
 ~ Exercise
-Prove the following property for the fibonacci function:
+フィボナッチ関数の次の性質を証明してください:
 ~~ ExerciseFragment {exname=ex3c-fibonacci}
 [INCLUDE=code/exercises/ex3c-fibonacci.fst:FibonacciGreaterThanArg]
 ~~
@@ -831,22 +824,18 @@ not great at doing it unassisted.
 
 ## Admit
 
-When constructing proofs it is often useful to assume parts of proofs,
-and focus on other parts. For instance, when doing case analysis we
-often want to know which cases are trivial and are automatically solved
-by F\*, and which ones need manual work. We can achieve this by admitting
-all but one case, if F\* can prove the lemma automatically, then the case
-is trivial. For this F\* provides an `admit` function, that can be used
-as follows:
+証明を構築する際、証明の部品を仮定して別の部品に集中することはしばしば有用です。
+例えば、ケース分析を行なっている際、ケースは自明で F\*  が自動的に解決できるのか、ケースが手動での証明を必要としているのかしばしば知りたくなります。
+1つのケースの全てを承認 (admit) することでこれを実現できます。
+F\* が補題を自動的に証明できるなら、そのケースは自明です。
+このような目的のために、F\* は `admit` 関数を提供していて、それは次のように使います:
 ```
     let rec factorial_is_greater_than_arg x =
       match x with
       | 3 -> ()
       | _ -> admit()
 ```
-Since type-checking this succeeds we know
-that the base case of the induction is trivially proved and need
-to focus our effort on the inductive case.
+この型検査には成功するので、帰納の基底ケースは自明に証明され、帰納ケースにフォーカスすべきであることがわかります。
 
 ~CH
 How about adding (proper) monotonicity?
@@ -865,7 +854,7 @@ let rec fact_monotone n m =
 <!--
 ## Automatic induction { #auto-ind }
 
-Many of these proofs by induction are quite boring. You simply do case
+2Many of these proofs by induction are quite boring. You simply do case
 analysis and call the induction hypothesis as needed. Surely, we should
 automate this for you---and we do, in many cases using an **experimental**
 _automatic induction_ feature.
@@ -880,57 +869,47 @@ formula and feed it to Z3, which in simple examples can take care of
 the rest.
 -->
 
-## Under the hood: `:bool` versus `:Type` { #sec-bool-versus-type }
+## `:bool` と `:Type` の詳細 { #sec-bool-versus-type }
 
-_You can probably skip this section on a first reading, if the title
-sounds mysterious to you. However, as you start to use quantified
-formulas in refinement types, you should make sure you understand this
-section._
+_もしこのタイトルが不可解に思えたなら、はじめて読む際にこの章をスキップすることができます。
+けれどもリファインメント型で量化された式を使いはじめるなら、この章を理解しているか確かめるべきです。_
 
-We mentioned earlier that a refinement type has the form `:x:t{phi(x)}`.
-In its primitive form, `phi` is in fact a type, a predicate on the value
-`x:t`. We allow you to use a boolean function in place of a type: under
-the covers, we implicitly coerce the boolean to a type, by adding the
-coercion
+以前、リファイメント型は `:x:t{phi(x)}` の形を取ると言及しました。
+その初期の形では、`phi` は実際には型で、値 `x:t` 上の述語です。
+型の代わりにブール関数を使うことができ、次のような変換を加えることで、型にブールを暗黙に反感します:
 
     b2t (b:bool) : Type = (b == true)
 
-The type '`==`' is the type
-constructor for the equality predicate; it is different from '`=`', which
-is a boolean function comparing a pair of values. Additionally, '`==`' is
-heterogeneous: you can speak about equality between any pair of values,
-regardless of their type. In contrast, '`=`' is homogeneous.
+型 '`==`' は等式の述語を表わす型コンストラクタです;
+それは '`=`' とは異なり、値のペアを比較するブール関数です。
+加えて '`==`' はヘテロジニアスです:
+その型にかかわらず、どのような値のペアに関して等式を主張することができます。
+対照的に '`=`' はホモジニアスです。
 
-The propositional connectives, `:/\`, `:\/`, and `:~`, for conjunction,
-disjunction and negations are type constructors. We also include `:==>`
-and `:<==>` for single and bidirectional implication. In contrast,
-`:&&`, `:||`, and `:not` are boolean functions.
+命題の結合 `:/\`, `:\/`, `:~` はそれぞれ論理積, 論理和, 否定を表わし、それらは型コンストラクタです。
+また単方向と双方向の論理包含を表わす `:==>` と `:<==>` もあります。
+対照的に `:&&`, `:||`, `:not` はブール関数です。
 
-Often, because of the implicit conversion from `:bool` to `:Type`, you
-can almost ignore the distinction between the two. However, when you
-start to write refinement formulas with quantifiers, the distinction
-between the two will become apparent.
+`:bool` から `:Type` への暗黙の変換のために、これら2つの間の差異をほとんど気にせずに済みます。
+けれども、量化を共なうリファインメント式を書きはじめるなら、両者の差異は明白になります。
 
-Both the universal quantifier `forall`, and the existential quantifier
-`exists`, are only available in `:Type`. When you mix refinements that
-include boolean function and the quantifiers, you need to use the
-propositional connectives. For example, the following formula
-is well-formed:
+全称量化 `forall` と存在量化 `exists` は `:Type` でのみ有効です。
+ブール関数と量化を含むリファインメントを混ぜる場合、命題の結合を使う必要があります。
+例えば、次の式は正しい形です:
 
     canRead e /\ forall x. canWrite x ==> canRead x
 
-It is a shorthand for the following, more elaborate form:
+これは次のようなより複雑な形の短縮形です:
 
     b2t(canRead e) /\ forall x. b2t(canWrite x) ==> b2t(canRead x)
 
-On the other hand, the following formula is not well-formed; F\* will
-reject it:
+一方、次の式は正しくありません;
+F\* はこれを拒否します:
 
     canRead e && forall x. canWrite x ==> canRead x
 
-The reason is that the quantifier is a type, whereas the `:&&` expects a
-boolean. While a boolean can be coerced to a type, there is no coercion
-in the other direction.
+その理由はこの量化は型で、その一方 `:&&` はブールを期待しているためです。
+ブールは型に変換できますが、別の方向の変換はありません。
 
 
 # Simple inductive types
