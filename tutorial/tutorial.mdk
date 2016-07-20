@@ -912,7 +912,7 @@ F\* はこれを拒否します:
 ブールは型に変換できますが、別の方向の変換はありません。
 
 
-# Simple inductive types
+# 単純な帰納型
 
 ~CH
 
@@ -925,41 +925,36 @@ bound somewhere else. We might want to raise a warning in such
 cases.
 ~
 
-Here's the standard definition of (immutable) lists in F\*.
+次は F\* での (イミュータブルな) リストの標準的な定義です。
 
     type list 'a =
       | Nil  : list 'a
       | Cons : hd:'a -> tl:list 'a -> list 'a
 
-We note some important conventions for the constructors of a data type in F\*.
+F\* でのデータ型のコンストラクタにはいくつかの重要な慣習があります。
 
-+ Constructor names must begin with a capital letter.
+* コンストラクタ名は大文字ではじまらなければなりません。
 
-+ When not writing effects in constructor types,
-  the default effect on the result is `Tot`
-  (as opposed to function types in general).
-  So, when we write `Cons: 'a -> list 'a -> list 'a`,  F\* desugars it to
-  `Cons: 'a -> Tot (list 'a -> Tot (list 'a))`.
+* コンストラクタ型に作用を書かなかった場合、その結果のデフォルトの作用 (関数型とは対照的に) は `Tot` です。
+  そのため `Cons: 'a -> list 'a -> list 'a` と書いたなら、F\* はそれを `Cons: 'a -> Tot (list 'a -> Tot (list 'a))` と解釈します。
 
-+ Constructors can be curried. So, we usually define our inductive
-  types as above so that we write `Cons hd tl` (curried)
-  rather than `Cons(hd,tl)` (uncurried).
+* コンストラクタはカリー化できます。
+  そのため通常上記のような帰納型を定義して、(アンカリー化された) `Cons(hd,tl)` ではなく
+  (カリー化された) `Cons hd tl` と書くことができます。
 
-+ Constructors can be partially applied, so `Cons hd` is legal and has
-  type `:list 'a -> Tot (list 'a)` when `hd:'a`.
+* コンストラクタは部分適用できます。
+  そのため `Cons hd` は正しく、`hd:'a` のときその型は `:list 'a -> Tot (list 'a)` になります。
 
 <!-- XXX -->
 
-The `list` type is defined in F\*'s standard prelude and is available
-implicitly in all F\* programs. We provide special (but standard) syntax
-for the list constructors:
+`list` 型は F\* の標準の prelude で定義されていて、全ての F\* プログラム中で暗黙的に有効です。
+リストコンストラクタに対して特別な (しかし標準的な) 構文が提供されています:
 
-* `[]` is `Nil`
-* `[v1;...;vn]` is `Cons v1 ... (Cons vn Nil)`
-* `hd::tl` is `Cons hd tl`.
+* `[]` は `Nil` です。
+* `[v1;...;vn]` は `Cons v1 ... (Cons vn Nil)` です。
+* `hd::tl` は `Cons hd tl` です。
 
-You can always just write out the constructors like `Nil` and `Cons`
-explicitly, if you find that useful (e.g., to partially apply `Cons`).
+(例えば `Cons` を部分適用するといった) 有用な場面では、`Nil` と `Cons` のようなコンストラクタを明示的に書くことができます。
 
 <!--
 The prelude also defines the `option` type, shown below:
@@ -971,18 +966,17 @@ The prelude also defines the `option` type, shown below:
 ```
 -->
 
-## Proofs about basic functions on lists { #sec-basic-lists }
+## リストに対する基本的な関数の証明 { #sec-basic-lists }
 
-The usual functions on lists are programmed in F\* just as in any other ML dialect.
-Here is the `length` function:
+リストに対する通常の関数は、他の ML 方言と同様に F\* でも書くことができます。
+次は `length` 関数です:
 
     val length: list 'a -> Tot nat
     let rec length l = match l with
       | [] -> 0
       | _ :: tl -> 1 + length tl
 
-The type of `length` proves it is a total function on lists of `:'a`-typed
-values, returning a non-negative integer.
+`length` の型は、この関数が `:'a` 型の値のリストに対する全域関数で、非負の整数を返すことを証明しています。
 
 <!--
 ~Remark
@@ -1002,14 +996,13 @@ I don't understand either, it is certainly wrong
 
 
 ~ Exercise
-Here's the `append` function that concatenates two lists.
+次は2つのリストを連結する `append` 関数です。
 ~~ ExerciseFragment {exname=ex4a-append-intrinsic}
 let rec append l1 l2 = match l1 with
   | [] -> l2
   | hd :: tl -> hd :: append tl l2
 ~~
-Give `append` a type that proves it always returns a list
-whose length is the sum of the lengths of its arguments.
+長さがその引数の長さの和となるようなリストを常に返すような型を `append` 与えてください。
 
 ~~ AnswerFragment {exname=ex4a-append-intrinsic}
     l1:list 'a -> l2:list 'a -> Tot (l:list 'a{length l = length l1 + length l2})
@@ -1017,8 +1010,7 @@ whose length is the sum of the lengths of its arguments.
 ~
 
 ~ Exercise
-Give `append` the weak type below,
-then prove the same property as in the previous exercise using a lemma.
+`append` に以下のような弱い型を与えた後、前の練習問題と同じ性質を補題を使って証明してください。
 ~~ ExerciseFragment {exname=ex4b-append-extrinsic}
 val append:list 'a -> list 'a -> Tot (list 'a)
 ~~
@@ -1033,9 +1025,8 @@ let rec append_len l1 l2 = match l1 with
 ~
 
 ~ Exercise
-Define a function `mem: x:'a -> l:list 'a -> Tot bool` that
-decides whether `x` is present in the `l` or not, then prove it satisfies the
-following property:
+`x` が `l` 中に存在するかどうかを判定する関数 `mem: x:'a -> l:list 'a -> Tot bool` を定義してください。
+その後、その関数が次の性質を満たすことを証明してください。
 ~~ ExerciseFragment {exname=ex4c-mem}
 val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
         -> Lemma (ensures (mem a (append l1 l2)  <==>  mem a l1 || mem a l2))
