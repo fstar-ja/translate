@@ -1657,13 +1657,13 @@ val bar : l:list int -> Tot int (decreases %[l;1])
 
 
 ~Exercise
-Write the partition function and prove it total.
+partition 関数を書いて、それが全域であることを証明してください。
 ~~ExerciseFragment {exname=ex6a-partition}
 val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
 ~~
 ~~Answer
 
-The following definition is included in F\*'s list library.
+次の定義は F\* のリストライブラリに含まれています。
 ~~~ SolutionFragment {exname=ex6a-partition}
 [INCLUDE=code/solutions/ex6a-partition.fst:Partition]
 ~~~
@@ -1681,12 +1681,13 @@ The following definition is included in F\*'s list library.
 ~~
 ~
 
-### Specifying `sort`
+### `sort` を明記する { #sec-specifying-sort }
 
 
-We'll verify `sort` intrinsically, although we'll have to use some
-additional lemmas. Here's a first-cut at a specification. Try asking
-F\* to prove it.
+本質的に `sort` を検証します。
+けれどもいくつか追加の補題を使う必要があります。
+次は仕様の最初の試みです。
+F* にこれを証明させてみてください。
 
     val sort_0: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l <==> mem i m) })
 
@@ -1694,26 +1695,23 @@ F\* to prove it.
 Is this an exercise or not? :)
 ~
 
-Unsurprisingly, it fails, on several counts:
+当然これはいくつかの点で失敗します:
 
-1. We fail to prove the function total. On what grounds can we claim
-   that each recursive call to `sort` is on a smaller argument?
-   Intuitively, at each recursive call, the length of the list passed
-   as an argument is strictly smaller, since it is a partition of
-   `tl`. To express this, we'll need to add a decreases clause.
+1. この関数が全域であることの証明に失敗します。
+   どうすればそれぞれの `sort` 呼び出しが小さくなる引数を取ることを主張できるでしょうか？
+   直感的にそれぞれの再帰呼び出しにおいて、引数として渡されるリストの長さは、`tl` の区画なので、厳密に小さくなります。
+   これを表わすために、decreases 節を追加する必要があります。
 
 
-2. We fail to prove both the sortedness property and the membership
-   property---we need some lemmas about `partition` and also about the
-   `sorted` function.
+2. ソートの性質とメンバーシップの性質の両方の証明に失敗します---`partition` と `sorted` 関数に関する補題が必要です。
 
-Let's try again:
+再び挑戦してみましょう:
 
     val sort: l:list int -> Tot (m:list int{sorted m
                                          /\ forall i. mem i l <==> mem i m})
                                 (decreases (length l))
 
-And here are a couple of lemmas about `partition` and `sorted`:
+そして次は `partition` と `sorted` に関する2つの補題です:
 
 
      val partition_lemma: f:('a -> Tot bool)
@@ -1730,10 +1728,8 @@ And here are a couple of lemmas about `partition` and `sorted`:
        | hd::tl -> partition_lemma f tl
 
 ~Remark
-The repeated sub-terms like `fst (partition f l)` in specifications
-call for a `let`-binding construct in types. We will see how
-to do that in a later section---once we have introduced some additional
-machinery.
+仕様中で `fst (partition f l)` のような繰り返されるサブ項は、型における `let` 束縛を必要としています。
+後の章でこれを行なう方法を紹介します---いくつか追加の機構を導入します。
 ~
 
      val sorted_concat_lemma: l1:list int{sorted l1}
@@ -1746,8 +1742,7 @@ machinery.
       | [] -> ()
       | hd::tl -> sorted_concat_lemma tl l2 pivot
 
-Finally, we also need a universally quantified variant of the
-`append_mem` lemma presented in a previous exercise:
+最後に、以前の練習問題で示した補題の全称量化された変種 `append_mem` も必要になります:
 
      val append_mem:  l1:list 'a
                    -> l2:list 'a
@@ -1758,13 +1753,10 @@ Finally, we also need a universally quantified variant of the
        | hd::tl -> append_mem tl l2
 
 
-Armed with these lemmas, let's return to our implementation of
-quicksort. Unfortunately, with the lemmas as they are, we still can't
-prove our original implementation of quicksort correct. As we saw with
-our proofs of `rev_injective` (Section [#sec-basic-lists]), we need to
-explicitly invoke our lemmas in order to use their properties. We'll
-be able to do better in a minute, but lets see how to modify `sort` by
-calling the lemmas to make the proof go through.
+これらの補題とともに、クイックソートの実装に戻りましょう。
+不幸にも、これらの補題を使っても、クイックソートの元の実装が正しいことをまだ証明できません。
+(章 [#sec-basic-lists] の) `rev_injective` の証明で見たように、それらの性質を使うために明示的に補題を呼び出す必要があります。
+すぐに上手く行きますが、証明を通すために補題を呼び出して `sort` をどうやって修正するのか見てみましょう。
 
     let cmp i j = i <= j
     val sort_tweaked: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l = mem i m)})
@@ -1780,13 +1772,12 @@ calling the lemmas to make the proof go through.
         sorted_concat_lemma lo hi pivot;
         append lo (pivot::hi)
 
-That works, but it's pretty ugly. Not only did we have to pollute our
-implementation with calls to the lemmas, in order to make those calls,
-we had to further rewrite our code so that we could bind names for
-the arguments to those lemmas. We can do much better.
+これは上手く行きますが、少し不恰好です。
+補題を呼び出して実装を汚す必要があっただけでなく、それらの呼び出しのために、それらの補題への引数のために名前を束縛できるようにコードを書き換えなければなりませんでした。
+これは改善することができます。
 
 
-### SMT Lemmas: Bridging the gap between intrinsic and extrinsic proofs
+### SMT 補題: intrinsic と extrinsic な証明のギャップを埋める { #sec-smt-lemmas }
 
 If only we had given `partition` and `sorted` richer intrinsic types,
 types that captured the properties that we proved using lemmas, we
