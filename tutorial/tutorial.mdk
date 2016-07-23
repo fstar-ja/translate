@@ -106,9 +106,11 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
 <!-- * Use `Alt-Q` to reformat paragraphs. -->
 <!-- * Drag&Drop a `.bib` file on the editor and start including citations. -->
 
-(訳注: この日本語マニュアルは [Verified programming in F\*] の翻訳です。)
+(訳注: この日本語マニュアルは [Verified programming in F\*] の翻訳です。
+翻訳に参加するには [翻訳リポジトリ] を参照してください。)
 
 [Verified programming in F\*]: https://www.fstar-lang.org/tutorial/tutorial.html
+[翻訳リポジトリ]: https://github.com/fstar-ja/translate/tree/master/tutorial
 
 # イントロダクション { #sec-introduction }
 
@@ -1779,34 +1781,22 @@ Is this an exercise or not? :)
 
 ### SMT 補題: intrinsic と extrinsic な証明のギャップを埋める { #sec-smt-lemmas }
 
-If only we had given `partition` and `sorted` richer intrinsic types,
-types that captured the properties that we proved using lemmas, we
-wouldn't have had to pollute out implementation of quicksort. This is
-a significant advantage of using the intrinsic proof style---every
-call of a function like `partition (fun x -> pivot <= x) tl`
-immediately carries all the properties that were proven intrinsically
-about the function.
+もし `partition` と `sorted` に補題を使って早明した性質を捕捉するより豊かな intrinsic な型を与えたいだけなら、クイックソートの実装を汚したくありませんでした。
+これは intrinsic な証明スタイルを使う重要な利点です---`partition (fun x -> pivot <= x) tl` のような関数の全ての呼び出しは、その関数に関して本質的に証明された全ての性質を直接持っています。
 
-However, polluting the type of a general-purpose function with a very
-application-specific type would also be awful. Consider enriching the
-type of `sorted` with the property proven by
-`sorted_concat_lemma`. The lemma is highly specialized for the
-quicksort algorithm, whereas `sorted` is a nice, general specification
-of sortedness that would work for insertion sort or merge sort, just
-as well. Polluting its type is a non-starter. So, it seems we are
-caught in a bind.
+けれども、アプリケーション特有の型を持つ一般目的の関数の型に対する汚染もまたひどいものでしょう。
+`sorted` の型を`sorted_concat_lemma` によって証明された性質で改良することを考えてみましょう。
+The lemma is highly specialized for the quicksort algorithm, whereas `sorted` is a nice, general specification of sortedness that would work for insertion sort or merge sort, just as well.
+Polluting its type is a non-starter.
+So, it seems we are caught in a bind.
 
-Wouldn't it be nice if there were some way to retroactively associate
-a property proven about a function `f` by a lemma directly with `f`,
-so that every application `f x` immediately carries the lemma
-properties? F\* provides exactly such a mechanism, which provides a
-way to bridge the gap between extrinsic and intrinsic proofs.
+Wouldn't it be nice if there were some way to retroactively associate a property proven about a function `f` by a lemma directly with `f`,
+so that every application `f x` immediately carries the lemma properties?
+F\* provides exactly such a mechanism, which provides a way to bridge the gap between extrinsic and intrinsic proofs.
 
-Let's say we wrote the type of `partition_lemma` as below---the only
-difference is in the very last line, the addition of `[SMTPat
-(partition f l)]`. That line instructs F\* and the SMT solver to
-associate with every occurrence of the term `partition f l` the
-property proven by the lemma.
+Let's say we wrote the type of `partition_lemma` as below---
+the only difference is in the very last line, the addition of `[SMTPat (partition f l)]`.
+That line instructs F\* and the SMT solver to associate with every occurrence of the term `partition f l` the property proven by the lemma.
 
     val partition_lemma: f:('a -> Tot bool)
       -> l:list 'a
