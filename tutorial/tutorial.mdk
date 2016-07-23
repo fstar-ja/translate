@@ -1047,27 +1047,21 @@ let rec append_mem l1 l2 a = match l1 with
 ~
 
 
-## To type intrinsically, or to prove lemmas?
+## 本質的に型となるのか、もしくは補題を証明するか？
 
-As the previous exercises illustrate, you can prove properties either
-by enriching the type of a function or by writing a separate lemma
-about it---we call these the 'intrinsic' and 'extrinsic' styles,
-respectively. Which style to prefer is a matter of taste and
-convenience: generally useful properties are often good candidates for
-intrinsic specification (e.g, that `length` returns a `nat`); more
-specific properties are better stated and proven as lemmas. However,
-in some cases, as in the following example, it may be impossible to
-prove a property of a function directly in its type---you must resort
-to a lemma.
+前章の練習問題のように、関数の型を強化したり、その関数に関する分離した補題を書くことで性質を証明できます---私達はそれらをそれぞれ 'intrinsic' スタイルと 'extrinsic' スタイルと呼んでいます。
+どちらのスタイルが向いているかは好みと利便性の問題です:
+(例えば `length` が `nat` を返すといったような) 一般に有用な性質は intrinsic な仕様が相応しいでしょう;
+より具体的な性質は補題で表明して証明した方が良いでしょう。
+けれども次の例のようにいくつかの場合では、型で直接関数の性質を証明するのは不可能なときがあります---補題に頼らねばなりません。
 
     val reverse: list 'a -> Tot (list 'a)
     let rec reverse = function
       | [] -> []
       | hd::tl -> append (reverse tl) [hd]
 
-Let's try proving that reversing a list twice is the identity function.
-It's possible to
-*specify* this property in the type of `reverse` using a refinement type.
+リストを二度逆順する関数が恒等関数であることを証明してみましょう。
+リファインメント型を使って `reverse` の型にこの性質を *明記* することができます。
 
     val reverse: f:(list 'a -> Tot (list 'a)){forall l. l = f (f l)}
 
@@ -1079,12 +1073,11 @@ got a function "(fun _682:<UNKNOWN> -> (match _682 with (Nil )  -> Nil
 	(Cons hd tl)  -> (append (reverse tl) (Cons hd Nil))))" (More arguments than annotated type (Typ_refine))
 ~
 
-However, F\* refuses to accept this as a valid type for `reverse`:
-proving this property requires two separate inductions, neither of
-which F\* can perform automatically.
+けれども、F\* はこれを `reverse` の有効な型として許容しません:
+この性質を証明するには2つの分離された帰納が必要で、そのどちらも F\* は自動的に行ないません。
 
-Instead, one can use two lemmas to prove the property we care about. Here
-it is:
+その代わりに、2つの補題を使ってこの性質を証明できます。
+それらの補題は次のようになります:
 
     let snoc l h = append l [h]
 
@@ -1098,79 +1091,73 @@ it is:
       | [] -> ()
       | hd::tl -> rev_involutive tl; snoc_cons (reverse tl) hd
 
-In the `Cons` case of `rev_involutive` we are explicitly applying not just
-the induction hypothesis but also the `snoc_cons` lemma we proved above.
+`rev_involutive` の `Cons` ケースでは、帰納法の仮定だけでなく上記せ証明済みの補題 `snoc_cons` も明示的に適用しています。
 
 ~Exercise
-Prove that reverse is injective, i.e.,
+逆順が単射であることを証明してください。例えば...
 ~~ ExerciseFragment {exname=ex4d-reverse}
 [INCLUDE=code/exercises/ex4d-reverse.fst:RevInjective]
 ~~
 ~~ Answer
-Perhaps you did it like this:
+おそらくこのような答えになったでしょう:
 ~~~ SolutionFragment {exname=ex4d-reverse}
 [INCLUDE=code/solutions/ex4d-reverse.fst:RevInjective1]
 ~~~
-That's quite a tedious proof, isn't it. Here's a simpler proof.
+これは退屈な証明ではないでしょうか。
+次はより簡潔な証明です。
 ~~~ SolutionFragment {exname=ex4d-reverse}
 [INCLUDE=code/solutions/ex4d-reverse.fst:RevInjective2]
 ~~~
-The `rev_injective_2` proof is based on the idea that every involutive
-function is injective. We've already proven that `reverse` is
-involutive. So, we invoke our lemma, once for `l1` and once for `l2`.
-This gives to the SMT solver the information that `reverse (reverse
-l1) = l1` and `reverse (reverse l2) = l2`, which suffices to complete
-the proof. As usual, when structuring proofs, lemmas are your friends!
+証明 `rev_injective_2` は全ての対合関数が単射であるというアイデアに基づいています。
+`reverse` が対合であることはすでに証明しました。
+そのため `l1` に一度、`l2`.に一度、その補題を呼び出すことができます。
+これで SMT ソルバに `reverse (reverse l1) = l1` と `reverse (reverse l2) = l2` という情報を与え、これは証明を完了するに十分です。
+証明を構築するとき、補題はいつもあなたの友達なのです!
 ~~
 ~
 
-## Higher-order functions on lists
+## リストに対する高階関数
 
-### Mapping
+### マップ
 
-We can write higher-order functions on lists,
-i.e., functions taking other functions as arguments.
-Here is the familiar `map`:
+リストに対する高階関数、すなわち引数として別の関数を取る関数を書くことができます。
+次はおなじみの `map` です:
 
       let rec map f l = match l with
         | [] -> []
         | hd::tl -> f hd :: map f tl
 
-It takes a function `f` and a list `l` and it applies `f` to each element in `l`
-producing a new list. More precisely `map f [a1; ...; a_n]` produces the list
-`[f a1; ...; f a_n]`. For example:
+これは関数 `f` とリスト `l` を取り、`l` のそれぞれの要素に `f` を適用して新しいリストを生成します。
+より正確には `map f [a1; ...; a_n]` はリスト `[f a1; ...; f a_n]` を生成します。
+例えば:
 
     map (fun x -> x + 1) [0;1;2] = [1;2;3]
 
-As usual, without any specification, F\* will infer for `map` type
-`:('a -> 'b) -> list 'a -> list 'b`. Written explicitly, the type of
-`map` is `:('a -> ML 'b) -> Tot (list 'a -> ML (list 'b))`.  Notice
-that the type of `f` also defaults to a function with `:ML` effect.
+通常、仕様がない場合、F\* は `map` の型を `:('a -> 'b) -> list 'a -> list 'b` と推論します。
+明確に書くと、`map` の型は `:('a -> ML 'b) -> Tot (list 'a -> ML (list 'b))` です。
+`f` の型もデフォルトでは作用 `:ML` を持つ関数となることに注意してください。
 
-By adding a type annotation we can give a _different_ type to `map`:
+型注釈を追加することで、`map` に _異なる_ 型を与えることができます:
 
     val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
 
-This type is neither a subtype nor a supertype of the type F\*
-inferred on its own.
+この型は F\* が推論した型のサブタイプでもスーパータイプでもありません。
 
->**No parametric polymorphism on effects**: You might hope to give
-`map` a very general type, one that accepts a function with any effect
-`E` and returns a function with that same effect. This would require a
-kind of effect polymorphism, which *F\* does not support*. This may
-lead to some code duplication. We plan to address this by allowing you
-to write more than one type for a value, an ad hoc overloading
-mechanism.
+>**作用に対するパラメトリック多相はありません**:
+`map` にもっと汎用的な型を与えたいと思うかもしれません。
+あらゆる作用 `E` を共ない、同じ作用を持つ関数を返す関数を許容したいと思うでしょう。
+これは作用に対して多相の一種を要求することになりますが、F\* はそのような多相をサポートしていません。
+このためいくらかードの重複を誘発します。
+私達はこれを解決するために、アドホックなオーバライド機構を用いて、値に対して1つ以上の型を書けるようになるよう計画しています。
 
 
-### Finding
+### 検索
 
 ~ Exercise
 
-We define a `find` function that given a boolean function `f` and a list
-`l` returns the first element in `l` for which `f` holds. If no element
-is found `find` returns `None`; for this we use the usual `:option` type (shown
-below and available in F\*'s standard prelude).
+ブール関数 `f` とリスト `l` が与えられると、`f` が真になる `l` の最初の要素を返す `find` 関数を定義します。
+要素が見つからないときは `find` は `None` を返します;
+このためいつもの `:option` 型を使います (これは以下に示されていますが、F\* の標準 prelude でも有効です)。
 
 ~~ ExerciseFragment {exname=ex4e-find}
     type option 'a =
@@ -1182,8 +1169,9 @@ below and available in F\*'s standard prelude).
       | hd::tl -> if f hd then Some hd else find f tl
 ~~
 
-Prove that if `find` returns `Some x` then `f x = true`.
-Is it better to do this intrinsically or extrinsically? Do it both ways.
+`find` が `Some x` を返すなら `f x = true` であることを証明してください。
+これは intrinsic と extrinsic どちらで行なうのが良いでしょうか？
+両方の方法で解いてください。
 
 ~~ AnswerFragment {exname=ex4e-find}
 [INCLUDE=code/solutions/ex4e-find.fst]
@@ -1191,12 +1179,12 @@ Is it better to do this intrinsically or extrinsically? Do it both ways.
 ~
 
 ~Exercise
-Define the `fold_left` function on lists, so that
+次のようなリストに対する `fold_left` 関数を定義してください:
 
     fold_left f [b1; ...; bn] a = f (bn, ... (f b2 (f b1 a)))
 
-Prove that `(fold_left Cons l [] = reverse l)`.
-(The proof is a level harder from what we've done so far)
+`(fold_left Cons l [] = reverse l)` を証明してください。
+(この証明はこれまで解いてきた練習問題より難しいでしょう。)
 ~~ ExerciseFragment {exname=ex4f-fold-left}
 val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
       Lemma (fold_left Cons l l' = append (reverse l) l')
@@ -1214,23 +1202,21 @@ Prove that `(fold_right Cons [] l = l)`.
 ~
 -->
 
-## Implicitly defined functions on inductive types
+## 帰納型に対して暗黙に定義された関数
 
-For each definition of an inductive type, F\* automatically introduces a
-number of utility functions: for each constructor, we have a
-*discriminator*; and for each argument of each constructor, we have a
-*projector*. We describe these next, using the list type (repeated below)
-as a running example.
+帰納型のそれぞれの定義対して、F\* は多くの有用な関数を自動的に導入します:
+それぞれのコンストラクタには、*discriminator* が手に入り;
+それぞれのコンストラクタのそれぞれの引数には、*projector* が手に入ります。
+実行例として (以下に繰り返し示す) リスト型を使ってこれらを次に説明します。
 
     type list 'a =
       | Nil  : list 'a
       | Cons : hd:'a -> tl:list 'a -> list 'a
 
-### Discriminators
+### Discriminator
 
-A discriminator is a boolean-valued total function that tests whether a
-term is the application of a particular constructor. For the `list` type,
-we have two discriminators:
+discriminator はブール値の全域関数で、項が個別のコンストラクタの適用であるかどうか調べます。
+`list` 型に対して、2つの discriminator が手に入ります:
 
     val is_Nil: list 'a -> Tot bool
     let is_Nil xs = match xs with [] -> true | _ -> false
@@ -1238,22 +1224,20 @@ we have two discriminators:
     val is_Cons: list 'a -> Tot bool
     let is_Cons xs = match xs with _::_-> true | _ -> false
 
-### Projectors
+### Projector
 
-From the type of the `Cons` constructor, F\* generates the following
-signatures:
+`Cons` コンストラクタの型から、F\* は次のシグニチャを生成します:
 
     val Cons.hd : l:list 'a{is_Cons l} -> Tot 'a
     val Cons.tl : l:list 'a{is_Cons l} -> Tot (list 'a)
 
-(here `Cons.hd` is a qualified name)
+(ここでは `Cons.hd` は限定された名前です)
 
-This indicates why the names `hd` and `tl` in the types of `Cons` are
-significant: they correspond to the names of the auto-generated
-projectors. If you don't name the arguments of a data constructor, F\*
-will generate names automatically (although these names are derived from
-the position of the arguments and their form is unspecified; so, it's
-good practice to name the arguments yourself).
+これは、`Cons` の型での名前 `hd` と `tl` が意味がある理由を示しています:
+それらは自動生成された projector の名前に相当します。
+もしデータコンストラクタの引数に名前をつけなかったら、F\* は名前を自動生成します。
+(とはいえ、これらの名前は引数の位置から導出され、その形は仕様化されていません;
+そのため、自分自身で引数に名前をつけるのは良い習慣です。)
 
 <!--
 ~ Remark
@@ -1273,8 +1257,7 @@ signatures---we will see this in the section on indexed types
 -->
 
 ~Exercise
-Write functions (call them `hd` and `tl`) whose types match
-those of `Cons.hd` and `Cons.tl`.
+その型が `Cons.hd` と `Cons.tl` の型にマッチする (`hd` と `tl` という名前の) 関数を書いてください。
 ~~ ExerciseFragment {exname=ex4g-hd-tl}
 [INCLUDE=code/exercises/ex4g-hd-tl.fst]
 ~~
@@ -1300,8 +1283,8 @@ when we have an automatic way ;)
 ~
 
 ~Exercise
-Write a function that returns the `n`th element of a list. Give a
-type that ensures it is total.
+リストの `n` 番目の要素を返す関数を書いてください。
+それが全域関数であることを保証する型を与えてください。
 ~~ ExerciseFragment {exname=ex4h-nth}
 (* Write your code here *)
 ~~
@@ -1322,33 +1305,32 @@ on proving that you have handled all the cases. We call this the
 semantically.
 -->
 
-## Tuples and records
+## タプルとレコード
 
-F\* provides syntactic sugar for tuples. Under the covers, tuples are
-just inductive types: tuples of size 2--8 are defined in the standard
-prelude. (You can add to this, if you like.) Here's the definition of
-pairs from the prelude:
+F\* はタプルに対するシンタックスシュガーを提供しています。
+タプルは単なる帰納型です:
+2--8 サイズのタプルは標準 prelude で定義されています。
+(もし必要なら追加できます。)
+次は prelude におけるペアの定義です:
 
     type tuple2 'a 'b =
       | MkTuple2: _1:'a -> _2:'b -> tuple2 'a 'b
 
-You can write `(5, 7)` instead of `MkTuple2 5 7`, and give it the type
-`(int * int)` as a shorthand for `tuple2 int int`.
+`MkTuple2 5 7` の代わりに `(5, 7)` と書くことができ、ペアには `tuple2 int int` を短縮した型 `(int * int)` を与えることができます。
 
-This notation generalizes to tuples of arbitrary size, so long as the
-corresponding `tupleN` data type is defined in the prelude.
+この表記は、prelude で定義された関連した `tupleN` データ型と同じサイズのタプルを生成します。
 
-F\* also provides syntax for records, although internally records (like
-tuples) boil down to data types with a single constructor. Here's an
-example:
+また F\* はレコードに対する構文も提供します。
+けれどもレコードは (タプルと同じように) 単一コンストラクタのデータ型に内部で要約されます。
+次はこの例です:
 
 
     type triple 'a 'b 'c = {fst:'a; snd:'b; third:'c}
     let f x = x.fst + x.snd + x.third
 
-F\* accepts this program, giving `f` the type `:(triple int int int -> Tot int)`.
+F\* はこのプログラムを受け付け、`f` に型 `:(triple int int int -> Tot int)` を与えます。
 
-This is equivalent to the following, more verbose, source program:
+これは次のようなより冗長なソースコードを等価です:
 
 
     type triple 'a 'b 'c =
@@ -1356,56 +1338,45 @@ This is equivalent to the following, more verbose, source program:
 
     let f x = MkTriple.fst x + MkTriple.snd x + MkTriple.third x
 
-# Proving termination { #sec-termination }
+# 停止性の証明 { #sec-termination }
 
-In F\* every pure function is proved to terminate. The termination
-check used by F\* is based on a semantic criterion, not syntactic
-conditions. We quickly sketch the basic structure of the F\*
-termination check---you'll need to understand a bit of this in order
-to write more interesting programs.
+F\* は全ての純粋な関数は停止することが証明されています。
+F\* で使われている停止性の検査は syntactic condition ではなく semantic criterion に基づいています。
+F\* の停止性検査の基本の概略を説明します---より興味深いプログラムを書くためには停止性について理解が必要になります。
 
-## A well-founded partial order on values
+## 値に対する整礎半順序
 
-In order to prove a function terminating in F\* one provides a
-measure: a pure expression depending on the function's arguments. F\*
-checks that this measure strictly decreases on each recursive call.
-The measure for the arguments of the call is compared to the measure
-for the previous call according to a well-founded partial order on F\*
-values. We write `v1 << v2` when `v1` _precedes_ `v2` in this order.
+F\* で関数の停止を証明するために、ある尺度を提供します:
+それはその関数の引数に依存した純粋な式です。
+F\* はそれぞれの再帰呼び出しでこの尺度が厳密に減少することを検査します。
+呼び出しにおける引数に対するこの尺度は、F\* の値に対する整礎半順序に従って、前回の呼び出しでの尺度と比較されます。
+この順序で `v1` が `v2` より _小さい_ とき、`v1 << v2` と書きます。
 
-> A relation `R` is a well-founded partial order on a set `S` if, and
-> only if, `R` is a partial order on `S` and there are no infinite
-> descending chains in `S` related by `R`. For example, taking `S` to
-> be `nat`, the set of natural numbers, the integer ordering `<` is a
-> well-founded partial order (in fact, it is a total order).
+> もし `R` が `S` に対する半順序で、`R` に関する `S` 中の無限降鎖がなければ、集合 `S` に対する関係 `R` は整礎半順序です。
+> 例えば、自然数の集合 `nat` である `S` を取るとき、整数の順序 `<` は整礎半順序です (実際にはこれは全順序です)。
 
-Since the measure strictly decreases on each recursive call, and there
-are no infinite descending chains, this guarantees that the function
-eventually stops making recursive calls, i.e., it terminates.
+この尺度はそれぞれの再帰呼び出しで厳密に減少し、かつ無限降鎖がないので、これは再帰呼び出しで関数が最終的に停止することを保証します。
 
-### The precedes relation
+### 減少関係
 
-1. **The ordering on integers**: Given `i, j : nat`,
-   we have `i << j <==> i < j`.
+1. **整数に対する順序**: `i, j : nat` が与えられたとき、`i << j <==> i < j` が得られます。
 
-   _Note_: Negative integers are not related by the `<<` relation,
-   which is only a _partial_ order.
+   _注意_: 単なる _半_ 順序なので、負の整数は `<<` 関係ではありません。
 
-2. **The subterm ordering on inductive types**: For any value
-    `D v1 ... vn` of an inductive type (where `D` is a constructor applied
-    to arguments `v1` to `vn`) we include `v_i << v`, for all `i`.
-    That is, the sub-terms of a well-typed constructed term
-    precede the constructed term. (The exception to this rule is `lex_t` below).
+2. **帰納型に対するサブ項順序**:
+    (`D` が `v1` から `vn` の引数に適用されたコンストラクタであるような) 帰納型のどのような値 `D v1 ... vn` に対しても、全ての `i` において `v_i << v` が得られます。
+    すなわち、正しく型付けされた項のサブ項はその項より小さくなります。
+    (この規則の例外は次の `lex_t` です。)
 ~CH
 I guess there is also an exception for types with negative occurrences, right?
 ~
 
-3. **The lexicographic ordering on lex_t**, as described below.
+3. **lex_t に対する辞書式順序**: 以下で説明します。
 
 
-### Lexically ordered pairs
+### 辞書式順序のペア
 
-Take a look at the classic function, `ackermann`:
+昔ながらの関数 `ackermann` を見てみましょう:
 
     val ackermann: m:nat -> n:nat -> Tot nat
     let rec ackermann m n =
@@ -1413,71 +1384,64 @@ Take a look at the classic function, `ackermann`:
       else if n = 0 then ackermann (m - 1) 1
       else ackermann (m - 1) (ackermann m (n - 1))
 
-Why does it terminate? At each recursive call, it is *not* the case that
-all the arguments are strictly less than the arguments at the previous
-call, e.g, in the second branch, `n` increases from `0` to `1`. However,
-this function does in fact terminate, and F\* proves that it does.
+なぜこれは停止するのでしょうか？
+それぞれの再帰呼び出しにおいて、全ての引数が前回の呼び出しでの引数より厳密に小さく *ならない* ケースがあります。
+例えば2番目の分岐において `n` は `0` から `1` に増加します。
+けれどもこの関数は実際に停止し、F\* はそれを証明します。
 
-The reason is that although each argument does not decrease in every
-recursive call, when taken together, the ordered pair of arguments `(m,n)`
-does decrease according to a *lexical ordering* on pairs.
+その理由は、全ての再帰呼び出しにおいてそれぞれの引数は減少していませんが、それらを一緒に取るとき、引数 `(m,n)` の順序ペアはペアの *辞書式順序* に従って減少しているからです。
 
-In its standard prelude, F\* defines the following inductive type:
+標準 prelude では、F\* は次の帰納型を定義しています:
 
     type lex_t =
       | LexTop  : lex_t
       | LexCons : #a:Type -> a -> lex_t -> lex_t
 
-(The `#` sign marks the first argument as implicit, see [#sec-implicit-arguments].)
+(`#` 記号は1番目の引数が暗黙的であるとマークしています。[#sec-implicit-arguments] を見てください。)
 
-**The lexicographic ordering on `lex_t`** is the following:
+**`lex_t` の辞書式順序** は次のようになります:
 
-* `LexCons v1 v2 << LexCons v1' v2'`, if and only if, either
-  `v1 << v1'`; or `v1=v1'` and `v2 << v2'`.
+* もし `v1 << v1'` もしくは、`v1=v1'` かつ `v2 << v2'` ならば、`LexCons v1 v2 << LexCons v1' v2'` です。
 
-* If `v:lex_t` and `v <> LexTop`, then `v << LexTop`.
+* もし `v:lex_t` かつ `v <> LexTop` ならば `v << LexTop` です。
 
 ~MK
 We could explain what that means, that longer `lex_t` are smaller?
 ~
 
-**We include the following syntactic sugar**:
+**次のシンタックスシュガーを使えます**:
 
->`%[v1;...;v_n]` is shorthand for `(LexCons v_1 ... (LexCons v_n LexTop))`
+>`%[v1;...;v_n]` は `(LexCons v_1 ... (LexCons v_n LexTop))` の短縮形です
 
-## A termination proof in detail
+## 停止性証明の詳細
 
-Suppose we are defining a function by recursion, using the following form:
+次の形を使って再帰による関数を定義しているとしましょう:
 
 
     val f: y1:t_1 -> .. -> yn:t_n -> Tot t
     let rec f x1 .. xn = e
 
-Usually, in ML, when type-checking `e`, the recursively bound function
-`f` is available for use in `e` at the type
-`y1:t_1 -> .. -> yn:t_n -> Tot t`, exactly the type written by the
-programmer. This type is, however, not sufficient to guarantee that an
-invocation of `f` does not trigger an infinite chain of recursive calls.
+通常 ML では `e` を型検査するとき、再帰的に束縛された関数 `f` に、型 `y1:t_1 -> .. -> yn:t_n -> Tot t` で `e` を用いることができます。
+この型はプログラマによって正確に書き下されます。
+けれどもこの型は、`f` の呼び出しが無限の再帰呼び出しを誘発してしまわないことを保証するのに十分ではありません。
 
-To prove termination (i.e., to rule out infinitely deep recursive calls), F\*
-uses a different rule for type-checking recursive functions. The recursively bound name `f`
-is available for use in `e`, but only at the more restrictive type shown below:
+停止性を証明するために (すなわちを無限の深い再帰呼び出しを除外するために)、F\* は再帰関数の型検査に異なる規則を用います。
+次に示すより制限された型においてのみ、再帰的に束縛された名前 `f` は `e` で用いることができます:
 
        y1:t1
     -> ...
     -> yn:t_n{%[y_1;...;y_n] << %[x_1;...;x_n]}
     -> Tot t
 
-That is, by default, F\* requires the function's parameters to decrease
-according to the lexical ordering of the parameters (in the order in
-which they appear, excluding all function-typed parameters). (There is a
-way to override this default---see Section [#sec-decreases-clause].)
+すなわち、デフォルトでは F\* は関数のパラメータが (全ての関数型のパラメータを除いてパラメータが出現する順序で) そのパラメータの辞書式順序に従って減少することを要求します。
+(このデフォルトを上書きする方法があります---章 [#sec-decreases-clause] を見てください。)
 
-Let's see how this works on a couple of examples.
 
-### Ackermann
+いくつかの例でこれがどのように働くのか見てみましょう。
 
-F* can show automatically that the `ackermann` function
+### アッカーマン
+
+F* は `ackermann` 関数
 
     1.  let rec ackermann m n =
     2.    if m=0 then n + 1
@@ -1485,45 +1449,39 @@ F* can show automatically that the `ackermann` function
     4.    else ackermann (m - 1)
     5.                   (ackermann m (n - 1))
 
-is terminating and has type:
+が停止することを自動的に示すことができます。このときその型は次のようになります:
 
     ackermann : nat -> nat -> Tot nat
 
-F* gives this function a default termination metric, so this expands out to:
+F* はこの関数にデフォルトの停止性メトリクスを与えます。
+そのためこの関数は次のように展開されます:
 
     ackermann : m:nat -> n:nat -> Tot nat (decreases %[m;n])
 
-The `decreases` clause will be discussed in the next section. In this
-example it leads to the F\* type-checker using the following more
-restrictive type for the recursive calls in the body of `ackermann`:
+`decreases` 節は次の章で議論します。
+この例では、この節は `ackermann` の本体中の再帰呼び出しを表わす次のようなより制限された型を F\* 型検査器に使わせます:
 
     ackermann: m':nat
             -> n':nat{%[m';n'] << %[m;n]}
             -> Tot nat
 
-At each of three recursive calls to `ackermann`, we need to prove, not
-only that the arguments are non-negative, but that they precede the
-previous arguments according to the refinement formula above.
+`ackermann` への3つの再帰呼び出しそれぞれにおいて、その引数が非負であるだけでなく、それらが上記のリファインメント式に従って前回の引数より小さくなることも証明する必要があります。
 
+* 行3の呼び出しに対して、`%[(m - 1);1] << %[m;n]` を示す必要があります。
+整数の順序に従って `m - 1 << m` であるので、これは解決します。
+そしてこの項の残りは無視できます。
 
-* For the call at line 3, we have to show that `%[(m - 1);1] << %[m;n]`.
-This works out, since `m - 1 << m` according to the integer ordering, and
-we can disregard the rest of the terms.
+* 行4の呼び出しは同じ理由で検査できます---1番目の引数が減少しています。
 
-* The call at line 4 verifies for the same reason---the first argument
-decreases.
+* 行5の呼び出しに対して、`%[m; (n-1)] << %[m; n]` を示す必要があります。
+ここではそれぞれのペアの1番目の要素は等しいため、2番目の要素を見ます。
+そしてそれは `n - 1 << n` であるので、証明は完了します。
 
-* For the call at line 5, we have to show that `%[m; (n-1)] << %[m; n]`.
-Here, the first elements of each pair are equal, so we look at the second
-element, and there `n - 1 << n`, and we're done.
+### decreases 節 {#sec-decreases-clause}
 
-### Decreases clauses {#sec-decreases-clause}
-
-Of course, sometimes you will need to override the default measure for
-recursive functions. If we just swap the arguments of the `ackermann`
-function the default measure no longer works and we need to add a
-`decreases` clause explicitly choosing a lexicographic ordering that
-first compares `m` and then `n`:
+もちろん、ときどき再帰関数のデフォルト尺度を上書きする必要があります。
+もし単純に `ackermann` 関数の引数を入れ換えたら、デフォルト尺度はもはや働きません。
+そして、最初に `m` を比較してから `n` を比較するような辞書式順序を選択する `decreases` 節を明示的に追加する必要があります:
 
     val ackermann_swap: n:nat -> m:nat -> Tot nat (decreases %[m;n])
     let rec ackermann_swap n m =
@@ -1532,8 +1490,8 @@ first compares `m` and then `n`:
        else ackermann_swap (ackermann_swap (n - 1) m)
                            (m - 1)
 
-The optional `decreases` clause is a second argument to the `Tot` effect.
-It is, in general, a total expression over the arguments of the function.
+この任意の `decreases` 節は作用 `Tot` の2番目の引数です。
+一般にこれはその関数の引数の全域の式です。
 
 <!-- this is messed up because of mult_assoc
 ~Exercise
@@ -1558,8 +1516,7 @@ total. Also, prove that it is functionally equivalent to `factorial`.
 -->
 
 ~Exercise
-Here is a more efficient (tail-recursive) variant of the list
-reverse function.
+次はリストの逆順関数のより効率的な (末尾再帰の) 変種です。
 ~~ ExerciseFragment {exname=ex5a-rev}
 val rev : l1:list 'a -> l2:list 'a -> Tot (list 'a) (decreases l2)
 let rec rev l1 l2 =
@@ -1567,9 +1524,7 @@ let rec rev l1 l2 =
   | []     -> l1
   | hd::tl -> rev (hd::l1) tl
 ~~
-Prove the following lemma showing the correctness of this
-efficient implementation with respect to the previous simple
-implementation:
+以前の単純な実装に対して、この効率的な実装が正しいことを示す次の補題を証明してください:
 ~~ ExerciseFragment {exname=ex5a-rev}
 val rev_is_ok : l:list 'a -> Lemma (rev [] l = reverse l)
 ~~
@@ -1601,8 +1556,8 @@ let rev_is_ok l = rev_is_ok_aux [] l; append_nil (reverse l)
 ~
 
 ~Exercise
-(**Challenge!**) Here is a more efficient (tail-recursive)
-variant of the Fibonacci function.
+(**変更!**)
+次はフィボナッチ関数のより効率的な (末尾再帰の) 変種です。
 ~~ ExerciseFragment {exname=ex5b-fib}
 val fib : nat -> nat -> n:nat -> Tot nat (decreases n)
 let rec fib a b n =
@@ -1610,9 +1565,7 @@ let rec fib a b n =
   | 0 -> a
   | _ -> fib b (a+b) (n-1)
 ~~
-Prove the following lemma showing the correctness of this
-efficient implementation with respect to the previous simple
-implementation:
+以前の単純な実装に対して、この効率的な実装が正しいことを示す次の補題を証明してください:
 ~~ ExerciseFragment {exname=ex5b-fib}
 val fib_is_ok : n:nat -> Lemma (fib 1 1 n = fibonacci n)
 ~~
@@ -1629,14 +1582,13 @@ let fib_is_ok n = fib_is_ok_aux 0 n
 ~~
 ~
 
-## Mutually recursive functions
+## 相互再帰関数
 
-The same strategy for proving termination also works for mutually
-recursive functions. In the case of mutually recursive functions, the
-F\* termination checker requires that all directly or mutually
-recursive calls decrease the termination metric of the called
-function. This is a quite strong requirement. Consider for instance
-the following example:
+相互再帰関数に対しても、停止性の証明に対する同じ戦略が使えます。
+相互再帰関数の場合、
+F\* の停止性検査器は、全ての直接もしくは相互再帰呼び出しが呼び出された関数の停止性メトリクスを減少させることを要求します。
+これは非常に強い要求です。
+次の例を考えてみましょう:
 
 ```
 val foo : l:list int -> Tot int
@@ -1647,40 +1599,32 @@ let rec foo l = match l with
 and bar l = foo l
 ```
 
-This function is terminating because `foo` is always called (via
-`bar`) on a sub-list. The call from `bar` to `foo` is not on a smaller
-list though, and with the default metrics this example is rejected.
+(`bar` を通して) `foo` は常にサブリストに対して呼び出されるので、この関数は停止します。
+けれども `bar` からの `foo` 呼び出しはより小さなリストに対してではありません。
+デフォルトのメトリクスを用いるとこの例は検査できません。
 
-We can use a custom metric to convince F\* that the two functions are
-terminating:
+2つの関数が停止することを F\* に納得させるために、カスタムのメトリクスを使うことができます:
 
 ```
 val foo : l:list int -> Tot int (decreases %[l;0])
 val bar : l:list int -> Tot int (decreases %[l;1])
 ```
 
-The metrics of `foo` and `bar` are both lexicographic tuples with the
-argument `l` in the first position and `0` or `1` in the second. The
-call from `foo` to `bar` decreases `l`, while the call from `bar` to
-`foo` keeps `l` the same, but decreases the second component from `1`
-to `0`.
+`foo` と `bar` のメトリクスは両方とも、1つ目は引数 `l` で2つ目は `0` もしくは `1` であるような辞書式のタプルです。
+`foo` からの `bar` 呼び出しは `l` を減少させ、`bar` からの `foo` 呼び出しは `l` を同じ値で保ちますが2番目の要素を `1` から `0` に減少させます。
 
 
-# Putting the pieces together
+# これまでの要素をまとめる
 
-We now look at two complete programs that exercise the various
-features we have learned about so far. In each case, there are some
-exercises to modify or generalize the programs.
+ここで、これまで学んできた様々な機能を練習する2つの完全なプログラムを見てみましょう。
+そのぞれの練習では、それらのプログラムを修正したり一般化したりするための練習問題があります。
 
-## Quicksort on lists
+## リストのクイックソート
 
-A canonical example for program verification is proving various
-sorting algorithms correct.
+プログラムの検証に対する標準的な例は、様々なソートアルゴリズムが正しいことを証明することです。
 
-We'll start with lists of integers and describe some properties that
-we'd like to hold true of a sorting algorithm, starting with a
-function `sorted`, which decides when a list of integers is sorted in
-increasing order.
+整数のリストからはじめて、いくつかの性質を表現しましょう。
+整数のリストを昇順にソートする関数 `sorted` からはじめて、ソートアルゴリズムが真であることを言いたいのです。
 
 ```
   val sorted: list int -> Tot bool
@@ -1690,21 +1634,20 @@ increasing order.
       | x::y::xs -> x <= y && sorted (y::xs)
 ```
 
-Given a sorting algorithm `sort`, we would like to prove the following
-property, where `mem` is the list membership function from the earlier
-exercise on lists (Section [#sec-basic-lists]).
+ソートアルゴリズム `sort` が与えられたとき、次の性質を証明したいとします。
+このとき `mem` は、先のリストの練習問題でのリストのメンバーシップ関数です (章 [#sec-basic-lists] を見てください)。
 
     sorted (sort l) /\ ( forall i. mem i l <==> mem i (sort l) )
 
-We will see below that this specification can still be improved.
+この仕様が改良できることを以降で見てみましょう。
 
-### Implementing Quicksort
+### クイックソートを実装する
 
-Here's a simple implementation of the quicksort algorithm. It always
-picks the first element of the list as the pivot; partitions the rest
-of the list into those elements greater than or equal to the
-pivot, and the rest; recursive sorts the partitions; and slots the
-pivot in the middle before returning.
+次はクイックソートアルゴリズムの単純な実装です。
+この実装は常にリストの1つ目の要素をピボットとして取り出し;
+リストの残りをピボット以上の要素を含む区画とそれ以外を含む区画に分け;
+それらの区画を再帰的にソートし;
+そして返る前に中央にピボッドを挿入します。
 
     let rec sort l = match l with
       | [] -> []
