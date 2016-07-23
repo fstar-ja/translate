@@ -5,6 +5,7 @@ PUBLISH_DIR=$(HOME)/doc/fstar-ja.github.io/doc
 
 out/tutorial.html: tutorial.mdk fstar.json
 	madoko -v --png tutorial.mdk
+	sed -i -e "s/max-width: 88ex/max-width: 135ex/" out/tutorial.html
 
 publish: out/tutorial.html
 	mkdir -p $(PUBLISH_DIR)
