@@ -67,11 +67,6 @@
 "Extrinsic"
 
 ## F
-
-### Universal quantifier
-
-"全称量化"
-
 ## G
 
 ### Ghost
@@ -217,6 +212,10 @@
 ### Unit
 
 "ユニット"
+
+### Universal quantifier
+
+"全称量化"
 
 ## V
 ## W
