@@ -110,7 +110,7 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
 
 [Verified programming in F\*]: https://www.fstar-lang.org/tutorial/tutorial.html
 
-# イントロダクション
+# イントロダクション { #sec-introduction }
 
 F\* は検証指向のプログラミング言語で、[Microsoft Research], [MSR-Inria], [Inria] によって開発されています。
 それは、型付で正格な関数型プログラミング言語である [ML] 族の言語の伝統を受け継いでいます。
@@ -224,7 +224,7 @@ F\* プログラムは数個のモジュールで構成されます。
 `f="demo/tempfile"` であったらブール `true` を返し、そうでなければ `false` を返します。
 関数 `canRead` も同様です---ファイルが書き込み可能もしくは `"demo/README"` ファイルであったなら、そのファイルは読み出し可能です。
 
-### ポリシーをファイルアクセスプリミティブと結びつける
+### ポリシーをファイルアクセスプリミティブと結びつける { #sec-tying-policy-file-access-primitives }
 
 ポリシーを強制するためには、ファイルを読み書きを実際に実装するプログラムのプリミティブにポリシーを接続する必要があります。
 
@@ -256,7 +256,7 @@ F\* は別に実装された外部のモジュールへのインターフェイ�
 もちろん、これらの宣言の重要な点は型シグニチャにおける `canRead` と `canWrite` の使用です。
 それらによってセキュリティセンシティブな関数の型をポリシーに接続できます。
 
-### プログラムを書き、そのセキュリティを検証する
+### プログラムを書き、そのセキュリティを検証する { #sec-writing-programs-verifying-security }
 
 コード片がアクセスコントロールポリシーに従っていることをチェックするのは退屈でエラーしやすいでしょう。
 たとえそれぞれのアクセスがセキュリティチェックで保護されていたとしても、どうすればそれぞれのチェックが適切であることを確認できるでしょうか？
@@ -317,12 +317,12 @@ Error ex1a-safe-read-write.fst(38,2-47,5): The following problems were found:
 ~
 `checkedRead` と `checkedWrite` は F\* によってコンパイル時にあらかじめ行なわれたのと同じチェックを実行時に延期させ、それらのチェックが成功した場合のみその入出力アクションを行なうため、これは安全です。
 
-# 基本: 型と作用
+# 基本: 型と作用 { #sec-basics-types-effects }
 
 全てを知らされていませんでしたが、F\* 独特の機能のいくつかを最初の例で既に見てきました。
 より詳細に見てみましょう。
 
-## リファインメント型
+## リファインメント型 { #sec-refinement-types }
 
 F\* の1つの特徴的な機能はリファインメント型の使用です。
 この機能を既に2度使いました。
@@ -336,7 +336,7 @@ F\* の1つの特徴的な機能はリファインメント型の使用です。
 今のところ、`:phi(x)` は式を評価すると得られる純粋なブールであると考えることができます。
 詳細には [#sec-bool-versus-type] で、より一般化します。
 
-## 推論された型と計算のための作用
+## 推論された型と計算のための作用 { #sec-inferred-types-effects-for-computations }
 
 ~CH
 Too much back and forth about type and effect _inference_ seems to be
@@ -408,7 +408,7 @@ point of view and end up with the second.
 
 今後は (例えば `:Tot` が作用で `:int` が結果の型である `:Tot int` のような) 型と作用のペアを、単に型と呼ぶことにします。<!-- unused: , or sometimes as a *computation* type -->.
 
-## 関数型
+## 関数型 { #sec-function-types }
 
 F\* は関数型言語で、関数は関数型が割り当てられた第一級の値です。
 例えば ML では、ある整数が正であるか判別する関数には型 `:int -> bool` が与えられます。
@@ -452,7 +452,7 @@ val canWrite: filename -> Tot bool
 ~~
 ~
 
-### デフォルトの作用は `ML`
+### デフォルトの作用は `ML` { #sec-default-effect-ml }
 
 注釈がない場合、F\* は、入出力を行なうかもしれないか、停止しないかもしれない関数を、作用 `:ML` を持つと (ときに保守的に) 推論します。
 そのため、下記どちらの関数も型 `:(int -> ML int)` を持つと推論されます。
@@ -482,7 +482,7 @@ Could start by explaining currying, then functions taking functions
 as arguments (e.g. sorting).
 ~
 
-### 計算する関数
+### 計算する関数 { #sec-computing-functions }
 
 _もし関数型プログラミングの初学者なら、はじめて読む際にこの章を飛ばしてください。_
 
@@ -523,7 +523,7 @@ Main ideas in this section:
 ここで戻って、整数を扱う単純な関数のプログラミングと性質の証明を見てみましょう。
 
 
-## 静的に検査される表明
+## 静的に検査される表明 { #sec-statically-checked-assertions }
 
 ~CH
 These example assertions are horrible because
@@ -576,7 +576,7 @@ F\* では、表明は実行時の意味を持ちません。
                      && max x y >= y
                      && (max x y = x || max x y = y))
 
-## 階乗とフィボナッチ関数
+## 階乗とフィボナッチ関数 { #sec-factorial-fibonacci-functions }
 
 階乗関数を見てみましょう:
 
@@ -665,7 +665,7 @@ let rec fibonacci n =
 ~~
 ~
 
-## 補題
+## 補題 { #sec-lemmas }
 
 `factorial` 関数を書いて、型 `:(nat -> Tot nat)` を与えたとしましょう。
 すると例えば `x > 2` ならば `factorial x > x` といったような、他の性質が気になるでしょう。
@@ -699,7 +699,7 @@ F\* では (計算上無意味な) ゴーストであるような式は1つの�
 `factorial_is_positive` の型における作用 `GTot` は、それがゴーストで全域関数であることを示しています。
 ~
 
-### 依存関数型
+### 依存関数型 { #sec-dependent-function-types }
 
 ~CH
 Lemmas don't seem like the most intuitive way of introducing dependent
@@ -725,7 +725,7 @@ See `max_ref_type` in `code/max.fst`?
 関数の正規のパラメータそれぞれは `x\(~i~\)` と名付けられていて、それらの名前のスコープはそれに続く最初の矢印の右側です。
 表記 `:t[x_1 ... x_m]` は `:t` 中に変数 `:x_1 ... x_m` が自由出現することを示しています。
 
-### リファインメント型と補題に対するシンタックスシュガー
+### リファインメント型と補題に対するシンタックスシュガー { #sec-syntactic-sugar-for-refinement-types-lemmas }
 
 引数が2より大きいとき、`factorial` がその引数より厳密に大きいことをどうやって明記すべきでしょうか？
 次は最初の試みです:
@@ -753,7 +753,7 @@ See `max_ref_type` in `code/max.fst`?
 
 `requires` の後の式は関数/補題の _事前条件_ で、`ensures` の後の式はその _事後条件_ です。
 
-### 帰納によって証明された単純な補題について詳細に
+### 帰納によって証明された単純な補題について詳細に { #sec-simple-lemma-proved-by-induction }
 
 ここで `factorial_is_greater_than_arg` の証明を詳細に見てみましょう。
 それは次のようになります:
@@ -912,7 +912,7 @@ F\* はこれを拒否します:
 ブールは型に変換できますが、別の方向の変換はありません。
 
 
-# 単純な帰納型
+# 単純な帰納型 { #sec-simple-inductive-types }
 
 ~CH
 
@@ -1047,7 +1047,7 @@ let rec append_mem l1 l2 a = match l1 with
 ~
 
 
-## 本質的に型となるのか、もしくは補題を証明するか？
+## 本質的に型となるのか、もしくは補題を証明するか？ { #sec-to-type-intrinsically-or-to-prove-lemmas }
 
 前章の練習問題のように、関数の型を強化したり、その関数に関する分離した補題を書くことで性質を証明できます---私達はそれらをそれぞれ 'intrinsic' スタイルと 'extrinsic' スタイルと呼んでいます。
 どちらのスタイルが向いているかは好みと利便性の問題です:
@@ -1116,9 +1116,9 @@ got a function "(fun _682:<UNKNOWN> -> (match _682 with (Nil )  -> Nil
 ~~
 ~
 
-## リストに対する高階関数
+## リストに対する高階関数 { #sec-higher-order-functions-on-lists }
 
-### マップ
+### マップ { #sec-mapping }
 
 リストに対する高階関数、すなわち引数として別の関数を取る関数を書くことができます。
 次はおなじみの `map` です:
@@ -1151,7 +1151,7 @@ got a function "(fun _682:<UNKNOWN> -> (match _682 with (Nil )  -> Nil
 私達はこれを解決するために、アドホックなオーバライド機構を用いて、値に対して1つ以上の型を書けるようになるよう計画しています。
 
 
-### 検索
+### 検索 { #sec-finding }
 
 ~ Exercise
 
@@ -1202,7 +1202,7 @@ Prove that `(fold_right Cons [] l = l)`.
 ~
 -->
 
-## 帰納型に対して暗黙に定義された関数
+## 帰納型に対して暗黙に定義された関数 { #sec-implicitly-defined-functions-on-inductive-types }
 
 帰納型のそれぞれの定義対して、F\* は多くの有用な関数を自動的に導入します:
 それぞれのコンストラクタには、*discriminator* が手に入り;
@@ -1305,7 +1305,7 @@ on proving that you have handled all the cases. We call this the
 semantically.
 -->
 
-## タプルとレコード
+## タプルとレコード { #sec-tuples-and-records }
 
 F\* はタプルに対するシンタックスシュガーを提供しています。
 タプルは単なる帰納型です:
@@ -1344,7 +1344,7 @@ F\* は全ての純粋な関数は停止することが証明されています�
 F\* で使われている停止性の検査は syntactic condition ではなく semantic criterion に基づいています。
 F\* の停止性検査の基本の概略を説明します---より興味深いプログラムを書くためには停止性について理解が必要になります。
 
-## 値に対する整礎半順序
+## 値に対する整礎半順序 { #sec-well-founded-partial-order }
 
 F\* で関数の停止を証明するために、ある尺度を提供します:
 それはその関数の引数に依存した純粋な式です。
@@ -1357,7 +1357,7 @@ F\* はそれぞれの再帰呼び出しでこの尺度が厳密に減少する�
 
 この尺度はそれぞれの再帰呼び出しで厳密に減少し、かつ無限降鎖がないので、これは再帰呼び出しで関数が最終的に停止することを保証します。
 
-### 減少関係
+### 減少関係 { #sec-precedes-relation }
 
 1. **整数に対する順序**: `i, j : nat` が与えられたとき、`i << j <==> i < j` が得られます。
 
@@ -1374,7 +1374,7 @@ I guess there is also an exception for types with negative occurrences, right?
 3. **lex_t に対する辞書式順序**: 以下で説明します。
 
 
-### 辞書式順序のペア
+### 辞書式順序のペア { #sec-lexically-ordered-pairs }
 
 昔ながらの関数 `ackermann` を見てみましょう:
 
@@ -1413,7 +1413,7 @@ We could explain what that means, that longer `lex_t` are smaller?
 
 >`%[v1;...;v_n]` は `(LexCons v_1 ... (LexCons v_n LexTop))` の短縮形です
 
-## 停止性証明の詳細
+## 停止性証明の詳細 { #sec-termination-proof-in-detail }
 
 次の形を使って再帰による関数を定義しているとしましょう:
 
@@ -1439,7 +1439,7 @@ We could explain what that means, that longer `lex_t` are smaller?
 
 いくつかの例でこれがどのように働くのか見てみましょう。
 
-### アッカーマン
+### アッカーマン { #sec-ackermann }
 
 F* は `ackermann` 関数
 
@@ -1582,7 +1582,7 @@ let fib_is_ok n = fib_is_ok_aux 0 n
 ~~
 ~
 
-## 相互再帰関数
+## 相互再帰関数 { #sec-mutually-recursive-functions }
 
 相互再帰関数に対しても、停止性の証明に対する同じ戦略が使えます。
 相互再帰関数の場合、
@@ -1614,12 +1614,12 @@ val bar : l:list int -> Tot int (decreases %[l;1])
 `foo` からの `bar` 呼び出しは `l` を減少させ、`bar` からの `foo` 呼び出しは `l` を同じ値で保ちますが2番目の要素を `1` から `0` に減少させます。
 
 
-# これまでの要素をまとめる
+# これまでの要素をまとめる { #sec-putting-the-pieces-together }
 
 ここで、これまで学んできた様々な機能を練習する2つの完全なプログラムを見てみましょう。
 そのぞれの練習では、それらのプログラムを修正したり一般化したりするための練習問題があります。
 
-## リストのクイックソート
+## リストのクイックソート { #sec-quicksort-on-lists }
 
 プログラムの検証に対する標準的な例は、様々なソートアルゴリズムが正しいことを証明することです。
 
@@ -1641,7 +1641,7 @@ val bar : l:list int -> Tot int (decreases %[l;1])
 
 この仕様が改良できることを以降で見てみましょう。
 
-### クイックソートを実装する
+### クイックソートを実装する { #sec-implementing-quicksort }
 
 次はクイックソートアルゴリズムの単純な実装です。
 この実装は常にリストの1つ目の要素をピボットとして取り出し;
@@ -1871,7 +1871,7 @@ derives the properties it needs from the lemmas that we have provided.
         append (sort lo) (pivot::sort hi)
 
 
-### Exercises
+### Exercises { #sec-exercises }
 
 ~CH
 New solution files don't yet compile.
