@@ -40,6 +40,10 @@
 
 "依存関数型"
 
+### Discriminator
+
+"Discriminator"
+
 ### Disjunction
 
 "論理和"
@@ -57,6 +61,10 @@
 ### Extract
 
 "エクストラクト"
+
+### Extrinsic
+
+"Extrinsic"
 
 ## F
 
@@ -85,6 +93,14 @@
 
 "帰納"
 
+### Infinite descending chain
+
+"無限降鎖"
+
+### Intrinsic
+
+"Intrinsic"
+
 ### IO
 
 "入出力"
@@ -97,7 +113,16 @@
 
 "補題"
 
+### Lexicographic ordering
+
+"辞書式順序"
+
 ## M
+
+### Measure
+
+"尺度"
+
 ## N
 
 ### Negation
@@ -106,6 +131,18 @@
 
 ## O
 ## P
+
+### Parametric polymorphism
+
+"パラメトリック多相"
+
+### Precede
+
+"小さい"
+
+### Projector
+
+"Projector"
 
 ### Pure function
 
@@ -145,7 +182,23 @@
 
 "サブ作用"
 
+### Sub-term
+
+"サブ項"
+
+### Subtype
+
+"サブタイプ"
+
+### Supertype
+
+"スーパータイプ"
+
 ## T
+
+### Termination metric
+
+"停止性メトリクス"
 
 ### Type signature
 
@@ -155,6 +208,10 @@
 
 "型シノニム"
 
+### Total order
+
+"全順序"
+
 ## U
 
 ### Unit
@@ -163,6 +220,13 @@
 
 ## V
 ## W
+
+### Well-founded partial order
+
+"整礎半順序"
+
+https://ja.wikipedia.org/wiki/%E6%95%B4%E7%A4%8E%E9%96%A2%E4%BF%82
+
 ## X
 ## Y
 ## Z
