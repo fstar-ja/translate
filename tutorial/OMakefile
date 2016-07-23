@@ -1,8 +1,18 @@
-.PHONY: clean
+PUBLISH_DIR=$(HOME)/doc/fstar-ja.github.io/doc
+
+.PHONY: clean publish
 .DEFAULT: out/tutorial.html
 
 out/tutorial.html: tutorial.mdk fstar.json
 	madoko -v --png tutorial.mdk
+
+publish: out/tutorial.html
+	mkdir -p $(PUBLISH_DIR)
+	rm -rf $(PUBLISH_DIR)/tutorial
+	mkdir $(PUBLISH_DIR)/tutorial
+	cp out/tutorial.html $(PUBLISH_DIR)/tutorial/
+	(cd $(PUBLISH_DIR)/tutorial/ && ln -s tutorial.html index.html)
+	cp -rf code $(PUBLISH_DIR)/tutorial/
 
 clean:
 	rm -f *~ css.sty madoko.css madoko.sty *math-dvi.tex *math-pdf.tex *math-dvi.final.tex *math-pdf.final.tex  *.aux *.dim *.dvi *.log *.out *.upa *.dimx *.html *.log *.pdf *.upa *.upb *.bbl *.blg .*~
