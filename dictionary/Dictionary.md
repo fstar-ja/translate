@@ -156,6 +156,14 @@
 
 "小さい"
 
+### Preservation
+
+"Preservation"
+
+### Progress
+
+"Progress"
+
 ### Projector
 
 "Projector"
