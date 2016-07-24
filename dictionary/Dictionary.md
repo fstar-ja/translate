@@ -172,6 +172,10 @@
 
 ## R
 
+### Reduce
+
+"簡約"
+
 ### Refinement type
 
 "リファインメント型"
@@ -193,6 +197,10 @@
 ### Simply-typed lambda-calculus
 
 "単純型付きラムダ計算"
+
+### Small-step
+
+"スモールステップ"
 
 ### Statement
 
@@ -232,6 +240,10 @@
 
 "型シノニム"
 
+### Typing environment
+
+"型環境"
+
 ### Total order
 
 "全順序"
@@ -254,6 +266,10 @@
 "整礎半順序"
 
 https://ja.wikipedia.org/wiki/%E6%95%B4%E7%A4%8E%E9%96%A2%E4%BF%82
+
+### Well-typed
+
+"型が正しい"
 
 ## X
 ## Y
