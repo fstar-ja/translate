@@ -2117,28 +2117,25 @@ let rec typing g e =
       | Some TBool, Some t2, Some t3 -> if t2 = t3 then Some t2 else None
       | _         , _      , _       -> None)
 ```
-Variables are simply looked up in the environment.
-For abstractions `EAbs x t e1` we type-check the body `e1` under the
-environment `extend g x t`, as explained above. If that succeeds and
-produces a type `t'`, then the whole abstraction is given type `TArrow t t'`.
-For applications `EApp e1 e2` we type-check `e1` and `e2` separately, and
-if `e1` has a function type `TArrow t11 t12` and
-`e2` has type `t11`, then the whole application has type `t12`.
-`ETrue` and `EFalse` have type `TBool`.
-For conditionals, we require that the guard has type `TBool` and
-the two branches have the same type, which is also the type of the conditional.
+変数は単純に環境から検索されます。
+抽象 `EAbs x t e1` に対して、上記で説明したように、環境 `extend g x t` の下で本体 `e1` を型検査します。
+もしそれが成功して型 `t'` を生成したら、全体の抽象には型 `TArrow t t'` が与えられます。
+適用 `EApp e1 e2` に対して、`e1` と `e2` を別々に型検査します。
+そしてもし `e1` が関数型 `TArrow t11 t12` を持ちかつ `e2` が型 `t11` を持つなら、全体の適用は型 `t12` を持ちます。
+`ETrue` と `EFalse` は型 `TBool` を持ちます。
+条件分岐に対して、そのガードが型 `TBool` を持ちかつ2つのブランチが同じ型を持つことを要求します。
+そしてまたこのブランチの型は条件分岐の型です。
 
-## Soundness proof
+## 健全性の証明 { #sec-soundness-proof }
 
 <!-- (CH: I generally find giving people finished proofs uninformative and unhelpful. -->
 <!-- This seems like something to do from scratch in an emacs buffer. Trying to capture -->
 <!-- that kind of interaction in the current format seems very hard.) -->
 
-We prove progress and preservation for STLC.
-The **progress** theorem tells us that closed, well-typed terms do not produce
-(immediate) dynamic typing errors: either a well-typed term is a value,
-or it can take an evaluation step.
-The proof is a relatively straightforward induction.
+STLC のために progress と preservation を証明しましょう。
+**progress** 定理は、閉じた型が正しい項が (直接に) 動的な型エラーを生成しないことを示します:
+型が正しい項は値であるか、評価ステップを取れます。
+その証明は実直な帰納になります。
 ```
 val progress : e:exp -> Lemma
       (requires (is_Some (typing empty e)))
