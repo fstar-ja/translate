@@ -856,7 +856,7 @@ let rec fact_monotone n m =
 <!--
 ## Automatic induction { #auto-ind }
 
-2Many of these proofs by induction are quite boring. You simply do case
+Many of these proofs by induction are quite boring. You simply do case
 analysis and call the induction hypothesis as needed. Surely, we should
 automate this for you---and we do, in many cases using an **experimental**
 _automatic induction_ feature.
