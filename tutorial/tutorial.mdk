@@ -1,4 +1,4 @@
-Title         : F\* における検証されたプログラミング
+Title         : F* における検証されたプログラミング
 Sub title     : チュートリアル
 Heading Base  : 2
 Author        : The F* Team
@@ -1986,7 +1986,7 @@ EAbs 0 TBool (EIf (EVar 0) EFalse ETrue)
 
 ## 操作的意味論 { #sec-operational-semantics }
 
-最初の一歩として STLC の標準的な値渡しインタープリタを定義しましょう。
+STLC の標準的なスモールステップ値渡しインタープリタを定義しましょう。
 式の評価に成功した最終結果は _値_ と呼ばれます。
 `is_value` を定義して、関数とブール定数は値であると主張しましょう。
 これは式に対するブールの述語 (全域関数) です:
@@ -2015,31 +2015,25 @@ let rec subst x e e' =
   | EFalse -> EFalse
   | EIf e1 e2 e3 -> EIf (subst x e e1) (subst x e e2) (subst x e e3)
 ```
-We traverse the expression and when we reach a variable `(EVar x')` we check whether this is the variable `x` we want to substitute, and if it is we replace it by `e`.
-For lambda abstractions `(EAbs x' t e1)` we only substitute inside the body `e1` if `x` and `x'` are different; if they are the same we leave the body unchanged.
-The reason for this is that the `x` in `e1` is bound by the abstraction:
-it is a new, local name that just happens to be spelled the same as some global name `x`.
-The global `x` is no longer accessible in this scope, since it is shadowed by the local `x`.
-The other cases are straightforward.
+その式を横断して、変数 `(EVar x')` に辿り着いたらそれが置換したい変数 `x` かどうかチェックし、もしそうならそれを `e` で置換します。
+ラムダ抽象 `(EAbs x' t e1)` に対して、もし `x` と `x'` が異なっていたら本体 `e1` の中のみを置換します;
+もしそれらが同じならその本体を変更しません。
+その理由は `e1` 中の `x` はラムダ抽象によって束縛されているからです:
+それは、単にたまたまグローバルな名前 `x` と同じ綴りである新しいローカルな名前です。
+ローカルな `x` でシャドウイングされているため、グローバルな `x` はこのスコープではアクセスできません。
+他のケースは簡単です。
 
-> _Note for experts: Because we will only reduce closed expressions,
-  where all variables
-  are bound by previous lambdas, we will ever only substitute closed
-  expressions (closed values in fact), and this naive definition of
-  substitution is good enough. Substitution would become trickier to define
-  or the representation of variables would have to change if we were considering
-  the case where e, the expression replacing a variable in
-  some other expression, may itself contain free variables._
+> _上級者への注意:
+  全ての変数が外のラムダで束縛された閉じた式のみを簡約するので、(実際閉じた値の) 閉じた式のみを置換します。
+  それには置換のこのナイーブな定義は十分です。
+  もし他の式中の値を置換する式 e が自由変数を含むような場合を考慮するなら、置換がより複雑になるか値の表現を変更しなければなりません。_
 
-Given the definition of values and of substitution we can now define
-a small-step interpreter, as a function `step` that takes an expression `e`
-and it either returns the expression to which `e` reduces in
-a single step, or it returns `None` in case of an error
-(all errors in this language are typing errors, and will be prevented
- statically by the type system).
+値の定義と置換の定義が与えられたので、これでスモールステップインタープリタを定義できます。
+そのインタープリタの関数 `step` は式 `e` を取り、`e` をシングルステップに簡約した式を返すか、エラーの場合には `None` を返します。
+(この言語における全てのエラーは型エラーで、これは型システムによって静的に防止されます。)
 ```
 val step : exp -> Tot (option exp)
-  let rec step e =
+let rec step e =
   match e with
   | EApp e1 e2 ->
       if is_value e1 then
@@ -2068,47 +2062,40 @@ val step : exp -> Tot (option exp)
   | _ -> None
 
 ```
-We execute an application expression `EApp e1 e2` in multiple steps by first reducing
-`e1` to a value, then reducing `e2` to a value, and if additionally `e1`
-is an abstraction `EAbs x t e' `we continue by substituting the formal
-argument `x` by the actual argument `e2`. If not we signal a dynamic typing error
-(a non-functional value is applied to arguments) by returning `None`.
-For `EIf e1 e2 e3` we first reduce the guard `e1`: if the guard reduces to `true`
-then we continue with `e2`, if the guard reduces to `false` we continue with `e3`,
-and if the guard reduces to something else (e.g. a function) we report a
-dynamic typing error. The `None -> None` cases simply propagate errors to
-the top level.
+適用の式 `EApp e1 e2` を複数のステップで実行します。
+最初に `e1` を値に簡約し、それから `e2` を値に簡約し、そしてもし `e1` が抽象 `EAbs x t e'` であるなら形式的な引数 `x` を実際の引数 `e2` で置換して続きます。
+もしそうでなければ、`None` を返すことで (関数でない値を引数に適用したという) 動的な型エラーを発生させます。
+`EIf e1 e2 e3` について、最初にガード `e1` を簡約し:
+もしそのガードが `true` に簡約されたら `e2` の簡約を続行し、
+もしそのガードが `false` に簡約されたら `e3` の簡約を続行し、
+そしてもしそのガードがそれ以外 (例えば関数) に簡約されたら動的な型エラーを報告します。
+`None -> None` の場合はエラーをトップレベルに伝搬させます。
 ```
 assert (step (EApp (EAbs 0 TBool (EVar 0))) ETrue)) = Some ETrue)
 assert (step (EApp ETrue ETrue) = None)
 ```
 
-## Type-checker
+## 型検査器 { #sec-type-checker }
 
-In order to assign a type to a term, we need to know what assumptions
-we should make about the types of its free variables. So typing
-happens with respect to a typing environment---a mapping from the
-variables in scope to their types. We represent such partial maps as
-functions taking an integer variable name and returning an optional type:
+型を項に割り当てるために、自由変数の型についての仮定を知る必要があります。
+そのため型環境に対して型付けが発生します---スコープでの値からそれらの型への写像です。
+整数の変数名を取りオプショナルな型を返す関数として、そのような部分写像を表わしましょう:
 ```
 type env = int -> Tot (option ty)
 ```
-We start type-checking closed terms in the empty environment,
-i.e. initially no variables are in scope.
+空の環境、すなわち最初にスコープに値がないような環境、における閉じた項の型検査からはじめましょう。
 ```
 val empty : env
 let empty _ = None
 ```
-When we move under a binder we extend the typing environment environment.
+束縛が起きると、その型環境を拡張します。
 ```
 val extend : env -> int -> ty -> Tot env
 let extend g x t x' = if x = x' then Some t else g x'
 ```
-For instance we type-check `EAbs x t e` in typing environment `g` by
-first type-checking the body `e` in the environment `extend g x t`.
+例えば、環境 `extend g x t` において本体 `e` を最初に型検査することで、型環境 `g` において `EAbs x t e` を型検査します。
 
-The type-checker is a total function taking an environment `g` and an expression `e`
-and producing either the type of `e` or `None` if `e` is not well-typed.
+型検査器は環境 `g` と式 `e` を取る全域関数で、`e` の型もしくは、`e` の型が正しくないなら `None` を生成します。
 
 ```
 val typing : env -> exp -> Tot (option ty)
