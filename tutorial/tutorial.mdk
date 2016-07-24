@@ -1288,7 +1288,7 @@ when we have an automatic way ;)
 リストの `n` 番目の要素を返す関数を書いてください。
 それが全域関数であることを保証する型を与えてください。
 ~~ ExerciseFragment {exname=ex4h-nth}
-(* Write your code here *)
+(* ここにコードを書いてください *)
 ~~
 ~~ AnswerFragment {exname=ex4h-nth}
 val nth : l:list 'a -> n:nat{n < length l} -> 'a
@@ -1785,18 +1785,17 @@ Is this an exercise or not? :)
 これは intrinsic な証明スタイルを使う重要な利点です---`partition (fun x -> pivot <= x) tl` のような関数の全ての呼び出しは、その関数に関して本質的に証明された全ての性質を直接持っています。
 
 けれども、アプリケーション特有の型を持つ一般目的の関数の型に対する汚染もまたひどいものでしょう。
-`sorted` の型を`sorted_concat_lemma` によって証明された性質で改良することを考えてみましょう。
-The lemma is highly specialized for the quicksort algorithm, whereas `sorted` is a nice, general specification of sortedness that would work for insertion sort or merge sort, just as well.
-Polluting its type is a non-starter.
-So, it seems we are caught in a bind.
+`sorted` の型を `sorted_concat_lemma` によって証明された性質で改良することを考えてみましょう。
+`sorted` は一般的な仕様で挿入ソートやマージソートでも働くのに対して、この補題はクイックソートに高度に特化されています。
+その型を汚すことは役立たずです。
+そのため困難に陥いっているようです。
 
-Wouldn't it be nice if there were some way to retroactively associate a property proven about a function `f` by a lemma directly with `f`,
-so that every application `f x` immediately carries the lemma properties?
-F\* provides exactly such a mechanism, which provides a way to bridge the gap between extrinsic and intrinsic proofs.
+もし補題によって関数 `f` について証明された性質を、遡って直接 `f` と結びつける方法があったら良いと思いませんか？
+全ての適用 `f x` が直接その補題の性質を持てるようにするのです。
+F\* は、このような intrinsic と extrinsic な証明のギャップを埋める方法を提供します。
 
-Let's say we wrote the type of `partition_lemma` as below---
-the only difference is in the very last line, the addition of `[SMTPat (partition f l)]`.
-That line instructs F\* and the SMT solver to associate with every occurrence of the term `partition f l` the property proven by the lemma.
+仮に次のような `partition_lemma` の型を書いたとします---唯一の違いは最後の行で、`[SMTPat (partition f l)]` を追加しています。
+この行は、項 `partition f l` の全ての出現とその補題によって証明された性質を関連付けるよう、F\* と SMT ソルバに支持します。
 
     val partition_lemma: f:('a -> Tot bool)
       -> l:list 'a
@@ -1809,15 +1808,13 @@ That line instructs F\* and the SMT solver to associate with every occurrence of
                                           || mem x (snd (partition f l)))))))
                          [SMTPat (partition f l)]
 
-Likewise, here's a revised type for `sorted_concat_lemma`. This time,
-we instruct F\* and the SMT solver to associate the lemma property
-only with very specific terms: just those that have the shape
+同様に、次は `sorted_concat_lemma` の改良された型です。
+このとき、補題の性質を特化した項にのみ関連付けるよう、F\* と SMT ソルバに支持します:
+その項は次のような形です。
 ```
 sorted (append 11 (pivot::l2))
 ```
-The more specific a pattern you can provide,
-the more discriminating the SMT solver will be in applying lemmas,
-keeping your verification times acceptable.
+受け入れ可能な検証時間にするために、より特化したパターンを与えることで、SMT ソルバが補題をより区別して適用するようになります。
 
     val sorted_concat_lemma: l1:list int{sorted l1}
                           -> l2:list int{sorted l2}
@@ -1827,7 +1824,7 @@ keeping your verification times acceptable.
                                    (ensures (sorted (append l1 (pivot::l2))))
                              [SMTPat (sorted (append l1 (pivot::l2)))]
 
-Finally, we also revise the type for `append_mem` in the same way:
+最後に、同じ方法で `append_mem` の型も改良します:
 
     val append_mem:  l1:list 'a
                   -> l2:list 'a
@@ -1840,16 +1837,14 @@ Finally, we also revise the type for `append_mem` in the same way:
 
 
 ~Remark
- Use `SMTPat` with care! If you specify a bad pattern, you will get
- very unpredictable performance from the verification engine. To
- understand the details behind `SMTPat`, you should read up a bit on
- patterns (aka triggers) for quantifiers in SMT solvers.
+ `SMTPat` は注意深く使ってください!
+ もし悪いパターンを指定すると、検証エンジンは予測できないパフォーマンスになってしまいます。
+ `SMTPat` の詳細を理解するために、SMT ソルバの量化に対するパターン (別名、トリガー) を少し研究しなければなりません。
 
 ~
 
-With these revised signatures, we can write `sort` just as we
-originally did, and give it the type we want. The SMT solver implicitly
-derives the properties it needs from the lemmas that we have provided.
+これらの改良されたシグニチャを使って、元に行なっていたのと同じ `sort` を書き、その関数に望んだ型を与えることができます。
+SMT ソルバは与えた補題から必要な性質を暗黙的に導出します。
 
     let cmp i j = i <= j
     val sort: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l = mem i m)})
@@ -1861,7 +1856,7 @@ derives the properties it needs from the lemmas that we have provided.
         append (sort lo) (pivot::sort hi)
 
 
-### Exercises { #sec-exercises }
+### 練習問題 { #sec-exercises }
 
 ~CH
 New solution files don't yet compile.
@@ -1881,11 +1876,10 @@ the same as for Exercide 6b, and would thus duplicate code.
 ~
 
 ~Exercise
-Starting from this implementation (given below), generalize `sort` so
-that it works on lists with an arbitrary element type, instead of just
-lists of integers. Prove it correct.
+(次に与える) 実装からはじめて、単なる整数のリストの代わりに任意の要素の型を持つリストで動作できるように、`sort` を一般化してください。
+それが正しいことを証明してください。
 ~~ ExerciseFragment {exname=ex6b-sort-poly}
-(* Start from the code in the "Load in editor" link *)
+(* "エディタに読み込む" リンクのコードからはじめてください *)
 ~~
 
 ~~ AnswerFragment {exname=ex6b-sort-poly}
@@ -1894,17 +1888,16 @@ lists of integers. Prove it correct.
 ~
 
 ~Exercise {exname=ex6c-break-sort-spec}
-Our specification for `sort` is incomplete. Why? Can you write a
-variation of `sort` that has the same specification as the one above,
-but discards some elements of the list?
+`sort` の仕様は不完全です。
+なぜですか？
+上記と同じ仕様を持ち、けれどリストのいくつかの要素を捨ててしまうような `sort` の変種を書けますか？
 ~~ ExerciseFragment {exname=ex6b-sort-poly}
-(* Start from the code in the "Load in editor" link *)
+(* "エディタに読み込む" リンクのコードからはじめてください *)
 ~~
 
 ~~ Answer
-The specification does not ensure that the resulting list is a
-permutation of the initial list: it could discard or repeat some
-elements.
+この仕様は結果のリストが最初のリストの置換であることを保証していません:
+この仕様は要素を捨てたり繰り返したりすることができてしまいます。
 ~~~ SolutionFragment {exname=ex6c-break-sort-spec}
 [INCLUDE=code/solutions/ex6c-break-sort-spec.fst]
 ~~~
@@ -1912,10 +1905,10 @@ elements.
 ~
 
 ~ Exercise
-Fix the specification to ensure that `sort` cannot discard any
-elements in the list. Prove that `sort` meets the specification.
+この仕様を修正して、`sort` がリスト中のどのような要素も捨てないことを保証してください。
+`sort` がこの仕様に合致することを証明してください。
 ~~ ExerciseFragment {exname=ex6b-sort-poly}
-(* Start from either the problem or the solution of exercise 6b *)
+(* この問題か練習問題 6b の答からはじめてください *)
 ~~
 ~~ AnswerFragment {exname=ex6d-no-discard}
 [INCLUDE=code/solutions/ex6d-no-discard.fst]
@@ -1923,7 +1916,7 @@ elements in the list. Prove that `sort` meets the specification.
 ~
 
 ~ Exercise
-Implement insertion sort and prove the same properties.
+挿入ソートを実装し、同じ性質を証明してください。
 ~~ ExerciseFragment {exname=ex6e-insertion-sort}
 val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x m)})
 ~~
@@ -1933,7 +1926,7 @@ val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x
 ~
 
 
-# Case study: simply-typed lambda-calculus
+# ケーススタディ: 単純型付きラムダ計算 { #sec-case-study-simply-typed-lambda-calculus }
 
 <!-- (CH: Any way I could have imported the exising code here without duplicating it? -->
 <!--   Without a way to do this maintaining this document and keeping it consistent -->
@@ -1941,31 +1934,28 @@ val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x
 
 [sf-stlc]: http://www.cis.upenn.edu/~bcpierce/sf/current/Stlc.html
 [sf-stlc-prop]: http://www.cis.upenn.edu/~bcpierce/sf/current/StlcProp.html
+[sf-stlc-ja]: http://proofcafe.org/sf-beta/Stlc_J.html
 
-We now look at a larger case study: proving the soundness of a type-checker
-for the simply-typed $\lambda$-calculus (STLC). If you're not familiar with
-STLC, you can have a look at the [Software Foundations book][sf-stlc] for
-a gentle introduction given by the textual explanations (you can ignore
-the Coq parts there). The formalization and proof here closely follows
-the one in [Software Foundations][sf-stlc-prop]. Our proofs are, however,
-shorter and much more readable than Coq proofs.
+ここでより大きなケーススタディを見てみましょう:
+単純型付きラムダ計算 (STLC) に対する型検査の健全性を証明します。
+もし STLC に馴染みがなければ、[Software Foundations 本][sf-stlc] ([日本語訳][sf-stlc-ja]) を参照して、その原文のやさしい導入を読むことができます (Coq に関する部分は無視することができます)。
+ここでのその形式化と証明は [Software Foundations][sf-stlc-prop] に密接に従います。
+けれども私達の証明は Coq の証明よりも短かく、より読み易いでしょう。
 
-## Syntax
+## 構文 { #sec-syntax }
 
-We represent STLC types by the F* inductive datatype `ty`.
+F* の帰納データ型 `ty` で STLC の型を表わしましょう。
 ```
 type ty =
   | TBool  : ty
   | TArrow : ty -> ty -> ty
 ```
-We consider Booleans as the only base type (`TBool`).
-Function types are represented by the `TArrow` constructor taking two
-type arguments. For instance we write `TArrow TBool TBool` for the type
-of functions taking a Boolean argument and returning a Boolean result.
-This would be written as `bool -> bool` in F* syntax, and
-$\mathsf{bool} \to \mathsf{bool}$ in paper notation.
+唯一の基本型 (`TBool`) としてブールを考えます。
+関数型は2つの型引数を取る `TArrow` コンストラクタで表わされます。
+例えば `TArrow TBool TBool` と書くと、ブールを引数に取りブールを返す関数の型を表わします。
+これは F* の構文では `bool -> bool` と書き、論文表記では $\mathsf{bool} \to \mathsf{bool}$ と書きます。
 
-We represent the expressions of STLC by the datatype `exp`.
+データ型 `exp` による STLC の式を表わしましょう。
 ```
 type exp =
   | EVar   : int -> exp
@@ -1975,34 +1965,31 @@ type exp =
   | EFalse : exp
   | EIf    : exp -> exp -> exp -> exp
 ```
-Variables are represented as integer "names" decorated by the constructor `EVar`.
-Variables are "bound" by lambda abstractions (`EAbs`).
-For instance the identity function on Booleans is written `EAbs 0 TBool (EVar 0)`.
-In paper notation one would write this function as $(\lambda x:\mathsf{bool}.~x)$.
-The type annotation on the argument (`TBool`) allows for very simple type-checking.
-We are not considering type inference here, to keep things simple.
-The expression that applies the identity function to the `ETrue` constant is written
+変数はコンストラクタ `EVar` で修飾された整数の "名前" として表わされます。
+変数はラムダ抽象 (`EAbs`) によって "束縛され" ます。
+例えば、ブールの恒等関数は `EAbs 0 TBool (EVar 0)` と書けます。
+論文表記ではこの関数を $(\lambda x:\mathsf{bool}.~x)$ と書きます。
+引数 (`TBool`) の型注釈はとても単純な型検査を許します。
+単純にするために、ここれでは型推論を考えていません。
+恒等関数を `ETrue` 定数に適用する式は次のように書きます:
 ```
 EApp (EAbs 0 TBool (EVar 0)) ETrue
 ```
-(in paper notation $(\lambda x:\mathsf{bool}.~x)~\mathsf{true}$).
+(論文表記では $(\lambda x:\mathsf{bool}.~x)~\mathsf{true}$ になります。)
 
-The language also has a conditional construct (if-then-else).
-For instance, the Boolean "not"
-function can be written as
+この言語は条件分岐 (if-then-else) も持っています。
+例えば、ブールの "否定" 関数は次のように書けます:
 ```
 EAbs 0 TBool (EIf (EVar 0) EFalse ETrue)
 ```
-(in paper notation
-$\lambda x:\mathsf{bool}.~\mathsf{if }~x~\mathsf{ then~false~else~true}$).
+(論文表記では $\lambda x:\mathsf{bool}.~\mathsf{if }~x~\mathsf{ then~false~else~true}$ になります。)
 
-## Operational semantics
+## 操作的意味論 { #sec-operational-semantics }
 
-We define a standard small-step call-by-value interpreter for STLC.
-The final result of successfully evaluating an expression is
-called a _value_. We postulate that functions and the Boolean
-constants are values by defining `is_value`,
-a boolean predicate on expressions (a total function):
+最初の一歩として STLC の標準的な値渡しインタープリタを定義しましょう。
+式の評価に成功した最終結果は _値_ と呼ばれます。
+`is_value` を定義して、関数とブール定数は値であると主張しましょう。
+これは式に対するブールの述語 (全域関数) です:
 ```
 val is_value : exp -> Tot bool
 let is_value e =
@@ -2012,11 +1999,10 @@ let is_value e =
   | EFalse     -> true
   | _          -> false
 ```
-The `EAbs`, `ETrue`, and `EFalse` cases share the same right-hand-side (`true`),
-which is a way to prevent duplication in definitions.
+`EAbs`, `ETrue`, `EFalse` のケースは同じ右辺 (`true`) を共有しています。
+これは定義の重複を防止する方法の1つです。
 
-In order to give a semantics to function applications we define a
-function `subst x e e'` that substitutes `x` with `e` in `e'`:
+関数適用に意味論を与えるために、`e'` 中の `x` を `e` で置換する関数 `subst x e e'` を定義しましょう:
 ```
 val subst : int -> exp -> exp -> Tot exp
 let rec subst x e e' =
@@ -2029,15 +2015,12 @@ let rec subst x e e' =
   | EFalse -> EFalse
   | EIf e1 e2 e3 -> EIf (subst x e e1) (subst x e e2) (subst x e e3)
 ```
-We traverse the expression and
-when we reach a variable `(EVar x')` we check whether this is the variable
-`x` we want to substitute, and if it is we replace it by `e`.
-For lambda abstractions `(EAbs x' t e1)` we only substitute inside the body
-`e1` if `x` and `x'` are different; if they are the same we leave the body unchanged.
+We traverse the expression and when we reach a variable `(EVar x')` we check whether this is the variable `x` we want to substitute, and if it is we replace it by `e`.
+For lambda abstractions `(EAbs x' t e1)` we only substitute inside the body `e1` if `x` and `x'` are different; if they are the same we leave the body unchanged.
 The reason for this is that the `x` in `e1` is bound by the abstraction:
-it is a new, local name that just happens to be spelled the same as some
-global name `x`. The global `x` is no longer accessible in this scope, since
-it is shadowed by the local `x`. The other cases are straightforward.
+it is a new, local name that just happens to be spelled the same as some global name `x`.
+The global `x` is no longer accessible in this scope, since it is shadowed by the local `x`.
+The other cases are straightforward.
 
 > _Note for experts: Because we will only reduce closed expressions,
   where all variables
