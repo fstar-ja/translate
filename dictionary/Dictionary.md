@@ -16,6 +16,10 @@
 
 "基底ケース"
 
+### Base type
+
+"基本型"
+
 ### Boolean
 
 "ブール"
@@ -25,6 +29,10 @@
 ### Call-by-value
 
 "値渡し"
+
+### Conditional
+
+"条件分岐"
 
 ### Coerce
 
@@ -76,6 +84,10 @@
 ## H
 ## I
 
+### Identity function
+
+"恒等関数"
+
 ### Implication
 
 "論理包含"
@@ -125,11 +137,20 @@
 "否定"
 
 ## O
+
+### Operational semantics
+
+"操作的意味論"
+
 ## P
 
 ### Parametric polymorphism
 
 "パラメトリック多相"
+
+### Permutation
+
+"置換"
 
 ### Precede
 
@@ -169,6 +190,10 @@
 
 "副作用"
 
+### Simply-typed lambda-calculus
+
+"単純型付きラムダ計算"
+
 ### Statement
 
 "ステートメント"
@@ -184,6 +209,10 @@
 ### Subtype
 
 "サブタイプ"
+
+### Substitute A with B
+
+"AをBで置換する"
 
 ### Supertype
 
