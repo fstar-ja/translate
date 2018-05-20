@@ -6,6 +6,10 @@
 
 "Admit"
 
+### Annotate
+
+"注釈する"
+
 ### Appear free
 
 "自由出現"
@@ -52,6 +56,10 @@
 
 "Discriminator"
 
+### Disjointness
+
+"互いに素な"
+
 ### Disjunction
 
 "論理和"
@@ -75,6 +83,11 @@
 "Extrinsic"
 
 ## F
+
+### F* standard library
+
+"標準F*ライブラリ"
+
 ## G
 
 ### Ghost
@@ -124,6 +137,10 @@
 
 "辞書式順序"
 
+### Liveness
+
+"活性"
+
 ### Low* standard library
 
 "標準Low*ライブラリ"
@@ -164,6 +181,10 @@
 
 "小さい"
 
+### Predicate
+
+"述語"
+
 ### Preservation
 
 "Preservation"
@@ -192,6 +213,10 @@
 
 "簡約"
 
+### Region
+
+"リージョン"
+
 ### Refinement type
 
 "リファインメント型"
@@ -217,6 +242,10 @@
 ### Simply-typed lambda-calculus
 
 "単純型付きラムダ計算"
+
+### Slice
+
+"スライス"
 
 ### Small-step
 
