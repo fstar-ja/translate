@@ -126,6 +126,10 @@
 
 ## M
 
+### Machine integer
+
+"機種依存整数"
+
 ### Measure
 
 "尺度"
