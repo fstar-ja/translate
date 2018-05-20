@@ -124,6 +124,10 @@
 
 "辞書式順序"
 
+### Low* standard library
+
+"標準Low*ライブラリ"
+
 ## M
 
 ### Machine integer
