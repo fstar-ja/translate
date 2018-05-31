@@ -88,6 +88,14 @@
 
 "標準F*ライブラリ"
 
+### First-order lambda calculus
+
+"一階ラムダ計算"
+
+### Flat record
+
+"フラットなレコード"
+
 ## G
 
 ### Ghost
@@ -110,6 +118,10 @@
 "純粋でない"
 
 ### Induction
+
+"帰納"
+
+### Inductive
 
 "帰納"
 
