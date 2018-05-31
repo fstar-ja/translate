@@ -155,6 +155,10 @@
 
 "尺度"
 
+### Monomorphic
+
+"単相的"
+
 ## N
 
 ### Negation
@@ -176,6 +180,10 @@
 ### Permutation
 
 "置換"
+
+### Polymorphic
+
+"多相的"
 
 ### Precede
 
@@ -276,6 +284,10 @@
 "スーパータイプ"
 
 ## T
+
+### Tagged union
+
+"タグ付き共用体"
 
 ### Termination metric
 
